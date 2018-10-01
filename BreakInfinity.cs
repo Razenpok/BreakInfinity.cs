@@ -71,6 +71,7 @@ namespace BreakInfinity
 			//TODO: I'm worried about mantissa being negative 0 here which is why I set it again, but it may never matter
 			if (this.mantissa == 0) { this.mantissa = 0; this.exponent = 0; return this; }
 			if (this.mantissa >= 1 && this.mantissa < 10) { return this; }
+			if (!BreakInfinity.IsFinite(this.mantissa)) { return this; }
 			
 			var temp_exponent = (long)Math.Floor(Math.Log10(Math.Abs(this.mantissa)));
 			this.mantissa = this.mantissa/powersof10[temp_exponent+BreakInfinity.indexof0inpowersof10];
@@ -195,7 +196,7 @@ namespace BreakInfinity
 				return this.ToDouble().ToString(CultureInfo.InvariantCulture);
 			}
 			
-			return this.mantissa + "e" + (this.exponent >= 0 ? "+" : "") + this.exponent;
+			return this.mantissa.ToString(CultureInfo.InvariantCulture) + "e" + (this.exponent >= 0 ? "+" : "") + this.exponent.ToString(CultureInfo.InvariantCulture);
 		}
 		
 		public String ToExponential(int places = MAX_SIGNIFICANT_DIGITS)
@@ -361,6 +362,8 @@ namespace BreakInfinity
 			
 			if (this.mantissa == 0) { return value; }
 			if (value.mantissa == 0) { return this; }
+			if (!BreakInfinity.IsFinite(this.mantissa)) { return this; }
+			if (!BreakInfinity.IsFinite(value.mantissa)) { return value; }
 			
 			BreakInfinity biggerDecimal, smallerDecimal;
 			if (this.exponent >= value.exponent)
@@ -748,6 +751,7 @@ namespace BreakInfinity
 		
 		public double Log(double b)
 		{
+			if (b == 0) { return Double.NaN; }
 			//UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater). We assume this to be true and thus only need to return a number, not a Decimal, and don't do any other kind of error checking.
 			return (2.30258509299404568402/Math.Log(b))*this.Log10();
 		}
@@ -798,7 +802,27 @@ namespace BreakInfinity
 			
 			//TODO: Fast track seems about neutral for performance. It might become faster if an integer pow is implemented, or it might not be worth doing (see https://github.com/Patashu/break_infinity.js/issues/4 )
 			
-			//TODO: Add back in fast tracks from break_infinity.js. They're kind of hard to write in C# lol
+			//Fast track: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
+			var temp = this.exponent*value;
+			double newMantissa = Double.NaN;
+			if (Math.Truncate(temp) == temp && BreakInfinity.IsFinite(temp) && Math.Abs(temp) < EXP_LIMIT)
+			{
+				newMantissa = Math.Pow(this.mantissa, value);
+				if (BreakInfinity.IsFinite(newMantissa))
+				{
+					return new BreakInfinity(newMantissa, (long)temp);
+				}
+			}
+			
+			//Same speed and usually more accurate. (An arbitrary-precision version of this calculation is used in break_break_infinity.js, sacrificing performance for utter accuracy.)
+			
+			var newexponent = Math.Truncate(temp);
+			var residue = temp-newexponent;
+			newMantissa = Math.Pow(10, value*Math.Log10(this.mantissa)+residue);
+			if (BreakInfinity.IsFinite(newMantissa))
+			{
+				return new BreakInfinity(newMantissa, (long)newexponent);
+			}
 			
 			//UN-SAFETY: This should return NaN when mantissa is negative and value is noninteger.
 			BreakInfinity result = BreakInfinity.Pow10(value*this.AbsLog10()); //this is 2x faster and gives same values AFAIK
@@ -999,11 +1023,12 @@ namespace BreakInfinity
         public bool lessThan(BreakInfinity other) {return this.CompareTo(other) < 0; }
         public bool greaterThanOrEqualTo(BreakInfinity other) { return this.CompareTo(other) > -1; }
         public bool greaterThan(BreakInfinity other) {return this.CompareTo(other) > 0; }
-
+		
+		static Random random = new System.Random();
 
 		public static BreakInfinity RandomDecimalForTesting(double absMaxExponent)
 		{
-			var random = new System.Random();
+			var random = BreakInfinity.random;
 			
 			//NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
 			//5% of the time, have a mantissa of 0
@@ -1038,6 +1063,7 @@ var result = a.add(c);
 namespace Rextester
 {
 	using BreakInfinity;
+	using System.Globalization;
 	
     public class Program
     {
@@ -1078,6 +1104,44 @@ namespace Rextester
 			Console.WriteLine(new BreakInfinity(300).EqTolerance(new BreakInfinity(300.0000005), 1e-9));
 			Console.WriteLine(new BreakInfinity(300).EqTolerance(new BreakInfinity(300.00000002), 1e-9));
 			Console.WriteLine(new BreakInfinity(300).EqTolerance(new BreakInfinity(300.0000005), 1e-8));
+			
+			for (var i = 0; i < 10000; ++i)
+			{
+				var a = BreakInfinity.RandomDecimalForTesting(100);
+				var b = BreakInfinity.RandomDecimalForTesting(100);
+				var aDouble = a.ToDouble();
+				var bDouble = b.ToDouble();
+				var smallNumber = BreakInfinity.RandomDecimalForTesting(2);
+				var smallDouble = smallNumber.ToDouble();
+				Assert(a.ToString() + "+" + b.ToString() + "=" + (a+b).ToString(), EqualEnough(a+b, aDouble+bDouble));
+				Assert(a.ToString() + "-" + b.ToString() + "=" + (a-b).ToString(), EqualEnough(a-b, aDouble-bDouble));
+				Assert(a.ToString() + "*" + b.ToString() + "=" + (a*b).ToString(), EqualEnough(a*b, aDouble*bDouble));
+				Assert(a.ToString() + "/" + b.ToString() + "=" + (a/b).ToString(), EqualEnough(a/b, aDouble/bDouble));
+				Assert(a.ToString() + " cmp " + b.ToString() + " = " + (a.CompareTo(b)), a.CompareTo(b) == aDouble.CompareTo(bDouble));
+				Assert(a.ToString() + " log " + smallNumber.ToString() + " = " + (a.Log(smallDouble).ToString()), EqualEnough(a.Log(smallDouble), Math.Log(aDouble, smallDouble)));
+				Assert(a.ToString() + " pow " + smallNumber.ToString() + " = " + (a.Pow(smallDouble).ToString()), EqualEnough(a.Pow(smallDouble), Math.Pow(aDouble, smallDouble)));
+			}
         }
+		
+		public static bool EqualEnough(BreakInfinity a, double b)
+		{
+			try
+			{
+				return (!BreakInfinity.IsFinite(a.ToDouble()) && !BreakInfinity.IsFinite(b)) || a.EqTolerance(b) || Math.Abs(a.exponent) > 300;
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(a.ToString() + ", " + b.ToString(CultureInfo.InvariantCulture) + ", " + e.ToString());
+				return false;
+			}
+		}
+		
+		public static void Assert(string message, bool result)
+		{
+			if (!result)
+			{
+				Console.WriteLine(message);
+			}
+		}
     }
 }
