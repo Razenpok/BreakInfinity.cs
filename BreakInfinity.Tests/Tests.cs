@@ -47,13 +47,11 @@ namespace BreakInfinity.Tests
             Console.WriteLine(new BigDouble(0).CompareTo(0.0));
             Console.WriteLine("...");
             Console.WriteLine(
-                new BigDouble(300).EqTolerance(new BigDouble(300), 1e-9));
+                new BigDouble(300).EqTolerance(new BigDouble(300)));
             Console.WriteLine(
-                new BigDouble(300).EqTolerance(new BigDouble(300.0000005),
-                    1e-9));
+                new BigDouble(300).EqTolerance(new BigDouble(300.0000005)));
             Console.WriteLine(
-                new BigDouble(300).EqTolerance(new BigDouble(300.00000002),
-                    1e-9));
+                new BigDouble(300).EqTolerance(new BigDouble(300.00000002)));
             Console.WriteLine(
                 new BigDouble(300).EqTolerance(new BigDouble(300.0000005),
                     1e-8));
@@ -74,11 +72,11 @@ namespace BreakInfinity.Tests
                     EqualEnough(a * b, aDouble * bDouble));
                 Assert(a.ToString() + "/" + b.ToString() + "=" + (a / b).ToString(),
                     EqualEnough(a / b, aDouble / bDouble));
-                Assert(a.ToString() + " cmp " + b.ToString() + " = " + (a.CompareTo(b)),
+                Assert(a.ToString() + " cmp " + b.ToString() + " = " + a.CompareTo(b),
                     a.CompareTo(b) == aDouble.CompareTo(bDouble));
-                Assert(a.ToString() + " log " + smallNumber.ToString() + " = " + (a.Log(smallDouble).ToString()),
+                Assert(a.ToString() + " log " + smallNumber.ToString() + " = " + a.Log(smallDouble),
                     EqualEnough(a.Log(smallDouble), Math.Log(aDouble, smallDouble)));
-                Assert(a.ToString() + " pow " + smallNumber.ToString() + " = " + (a.Pow(smallDouble).ToString()),
+                Assert(a.ToString() + " pow " + smallNumber.ToString() + " = " + a.Pow(smallDouble).ToString(),
                     EqualEnough(a.Pow(smallDouble), Math.Pow(aDouble, smallDouble)));
             }
         }
@@ -87,12 +85,12 @@ namespace BreakInfinity.Tests
         {
             try
             {
-                return (!BigDouble.IsFinite(a.ToDouble()) &&
-                        !BigDouble.IsFinite(b)) || a.EqTolerance(b) || Math.Abs(a.exponent) > 300;
+                return !BigDouble.IsFinite(a.ToDouble()) &&
+                       !BigDouble.IsFinite(b) || a.EqTolerance(b) || Math.Abs(a.Exponent) > 300;
             }
             catch (Exception e)
             {
-                Console.WriteLine(a.ToString() + ", " + b.ToString(CultureInfo.InvariantCulture) + ", " + e.ToString());
+                Console.WriteLine(a.ToString() + ", " + b.ToString(CultureInfo.InvariantCulture) + ", " + e);
                 return false;
             }
         }
