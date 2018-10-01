@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text.RegularExpressions;
 
-namespace BreakInfinity
+namespace BreakInfinityNs
 {
     public class BreakInfinity : IComparable
     {
@@ -13,10 +10,10 @@ namespace BreakInfinity
 
         const long NUMBER_EXP_MAX = 308; //the largest exponent that can appear in a Number, though not all mantissas are valid here.
         const long NUMBER_EXP_MIN = -324; //The smallest exponent that can appear in a Number, though not all mantissas are valid here.
-        
+
         	//we need this lookup table because Math.pow(10, exponent) when exponent's absolute value is large is slightly inaccurate. you can fix it with the power of math... or just make a lookup table. faster AND simpler
         static double[] powersof10 = new double[632];
-        
+
         static BreakInfinity()
         {
             int i_actual = 0;
@@ -27,68 +24,68 @@ namespace BreakInfinity
             }
         }
         const int indexof0inpowersof10 = 323;
-        
+
         public double mantissa = Double.NaN;
         public long exponent = long.MinValue; //TODO: Increase to Decimal or BigInteger?
 		public double m { get { return this.mantissa; } set { this.mantissa = value; } }
 		public long e { get { return this.exponent; } set { this.exponent = value; } }
-        
+
 		#region Helper Static Functions
-		
+
 		public static bool IsFinite(double value)
 		{
 			return !(Double.IsNaN(value) || Double.IsInfinity(value));
 		}
-		
+
 		public static string ToFixed(double value, int places)
 		{
 			return value.ToString("F" + places, CultureInfo.InvariantCulture);
 		}
-		
+
 		public static string PadEnd(string str, int maxLength, char fillString)
 		{
 			if (str == null)
 			{
 				str = "";
 			}
-			
+
 			var length = str.Length;
 			if (length >= maxLength)
 			{
 				return str;
 			}
-			
+
 			var fillLen = maxLength - length;
 			return str + new string(fillString, fillLen);
 		}
-		
+
 		#endregion
-		
+
         private BreakInfinity Normalize()
         {
             //When mantissa is very denormalized, use this to normalize much faster.
-			
+
 			//TODO: I'm worried about mantissa being negative 0 here which is why I set it again, but it may never matter
 			if (this.mantissa == 0) { this.mantissa = 0; this.exponent = 0; return this; }
 			if (this.mantissa >= 1 && this.mantissa < 10) { return this; }
 			if (!BreakInfinity.IsFinite(this.mantissa)) { return this; }
-			
+
 			var temp_exponent = (long)Math.Floor(Math.Log10(Math.Abs(this.mantissa)));
 			this.mantissa = this.mantissa/powersof10[temp_exponent+BreakInfinity.indexof0inpowersof10];
 			this.exponent += temp_exponent;
-			
+
 			return this;
         }
-        
+
         private BreakInfinity() { }
-        
+
         public BreakInfinity(double mantissa, long exponent)
         {
             this.mantissa = mantissa;
             this.exponent = exponent;
             Normalize();
         }
-        
+
         public static BreakInfinity FromMantissaExponent_NoNormalize(double mantissa, long exponent)
         {
             //Well, you know what you're doing!
@@ -97,13 +94,13 @@ namespace BreakInfinity
             result.exponent = exponent;
             return result;
         }
-        
+
         public BreakInfinity(BreakInfinity other)
         {
             this.mantissa = other.mantissa;
             this.exponent = other.exponent;
         }
-		
+
 		private BreakInfinity FromNumber(double value)
 		{
 			//SAFETY: Handle Infinity and NaN in a somewhat meaningful way.
@@ -127,12 +124,12 @@ namespace BreakInfinity
 			}
 			return this;
 		}
-		
+
 		public BreakInfinity(double value)
 		{
 			FromNumber(value);
 		}
-		
+
 		public BreakInfinity(string value)
 		{
 			if (value.IndexOf('e') != -1)
@@ -149,40 +146,40 @@ namespace BreakInfinity
 				if (Double.IsNaN(this.mantissa)) { throw new Exception("[DecimalError] Invalid argument: " + value); }
 			}
 		}
-		
+
 		public double ToDouble()
 		{
 			//Problem: new Decimal(116).toNumber() returns 115.99999999999999.
 			//TODO: How to fix in general case? It's clear that if toNumber() is VERY close to an integer, we want exactly the integer. But it's not clear how to specifically write that. So I'll just settle with 'exponent >= 0 and difference between rounded and not rounded < 1e-9' as a quick fix.
-			
+
 			//var result = this.mantissa*Math.pow(10, this.exponent);
-			
+
 			if (exponent == long.MinValue) { return Double.NaN; }
 			if (this.exponent > NUMBER_EXP_MAX) { return this.mantissa > 0 ? Double.PositiveInfinity : Double.NegativeInfinity; }
 			if (this.exponent < NUMBER_EXP_MIN) { return 0.0; }
 			//SAFETY: again, handle 5e-324, -5e-324 separately
 			if (this.exponent == NUMBER_EXP_MIN) { return this.mantissa > 0 ? 5e-324 : -5e-324; }
-			
+
 			var result = this.mantissa*powersof10[this.exponent+indexof0inpowersof10];
 			if (!BreakInfinity.IsFinite(result) || this.exponent < 0) { return result; }
 			var resultrounded = Math.Round(result);
 			if (Math.Abs(resultrounded-result) < 1e-10) return resultrounded;
 			return result;
 		}
-		
+
 		public Double MantissaWithDecimalPlaces(int places)
 		{
 			// https://stackoverflow.com/a/37425022
-		
+
 			if (Double.IsNaN(this.mantissa) || (this.exponent == long.MinValue)) return Double.NaN;
 			if (this.mantissa == 0) return 0;
-			
+
 			int len = places+1;
 			int numDigits = (int)Math.Ceiling(Math.Log10(Math.Abs(this.mantissa)));
 			double rounded = Math.Round(this.mantissa*Math.Pow(10,len-numDigits))*Math.Pow(10,numDigits-len);
             return Double.Parse(BreakInfinity.ToFixed(rounded, (int)Math.Max(len-numDigits,0)), CultureInfo.InvariantCulture);
 		}
-		
+
 		public override String ToString() {
 			if (Double.IsNaN(this.mantissa) || (this.exponent == long.MinValue)) return "NaN";
 			if (this.exponent >= EXP_LIMIT)
@@ -190,26 +187,26 @@ namespace BreakInfinity
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
 			}
 			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0"; }
-			
+
 			if (this.exponent < 21 && this.exponent > -7)
 			{
 				return this.ToDouble().ToString(CultureInfo.InvariantCulture);
 			}
-			
+
 			return this.mantissa.ToString(CultureInfo.InvariantCulture) + "e" + (this.exponent >= 0 ? "+" : "") + this.exponent.ToString(CultureInfo.InvariantCulture);
 		}
-		
+
 		public String ToExponential(int places = MAX_SIGNIFICANT_DIGITS)
 		{
 			// https://stackoverflow.com/a/37425022
-			
+
 			//TODO: Some unfixed cases:
 			//new Decimal("1.2345e-999").toExponential()
 			//"1.23450000000000015e-999"
 			//new Decimal("1e-999").toExponential()
 			//"1.000000000000000000e-999"
 			//TBH I'm tempted to just say it's a feature. If you're doing pretty formatting then why don't you know how many decimal places you want...?
-		
+
 			if (Double.IsNaN(this.mantissa) || (this.exponent == long.MinValue)) return "NaN";
 			if (this.exponent >= EXP_LIMIT)
 			{
@@ -220,10 +217,10 @@ namespace BreakInfinity
 			int len = places+1;
 			int numDigits = (int)Math.Ceiling(Math.Log10(Math.Abs(this.mantissa)));
 			double rounded = Math.Round(this.mantissa*Math.Pow(10,len-numDigits))*Math.Pow(10,numDigits-len);
-			
+
 			return BreakInfinity.ToFixed(rounded, (int)Math.Max(len-numDigits,0)) + "e" + (this.exponent >= 0 ? "+" : "") + this.exponent;
 		}
-		
+
 		public string ToFixed(int places = MAX_SIGNIFICANT_DIGITS)
 		{
 			if (Double.IsNaN(this.mantissa) || (this.exponent == long.MinValue)) return "NaN";
@@ -232,11 +229,11 @@ namespace BreakInfinity
 				return this.mantissa > 0 ? "Infinity" : "-Infinity";
 			}
 			if (this.exponent <= -EXP_LIMIT || this.mantissa == 0) { return "0" + (places > 0 ? BreakInfinity.PadEnd(".", places+1, '0') : ""); }
-			
+
 			// two cases:
 			// 1) exponent is 17 or greater: just print out mantissa with the appropriate number of zeroes after it
 			// 2) exponent is 16 or less: use basic toFixed
-			
+
 			if (this.exponent >= MAX_SIGNIFICANT_DIGITS)
 			{
 				return BreakInfinity.PadEnd(this.mantissa.ToString(CultureInfo.InvariantCulture).Replace(".", ""), (int)this.exponent+1, '0') + (places > 0 ? BreakInfinity.PadEnd(".", places+1, '0') : "");
@@ -246,7 +243,7 @@ namespace BreakInfinity
 				return BreakInfinity.ToFixed(this.ToDouble(), places);
 			}
 		}
-		
+
 		public String ToPrecision(int places = MAX_SIGNIFICANT_DIGITS)
 		{
 			if (this.exponent <= -7)
@@ -259,39 +256,39 @@ namespace BreakInfinity
 			}
 			return this.ToExponential(places-1);
 		}
-		
+
 		public String ToStringWithDecimalPlaces(int places = MAX_SIGNIFICANT_DIGITS)
 		{
 			return this.ToExponential(places);
 		}
-		
+
 		public BreakInfinity Abs()
 		{
 			return new BreakInfinity(Math.Abs(this.mantissa), this.exponent);
 		}
-		
+
 		public static BreakInfinity Abs(BreakInfinity v) { return v.Abs(); }
-		
+
 		public BreakInfinity Neg()
 		{
 			return new BreakInfinity(-this.mantissa, this.exponent);
 		}
-		
+
 		public static BreakInfinity Neg(BreakInfinity v) { return v.Neg(); }
 		public BreakInfinity Negate() { return this.Neg(); }
 		public static BreakInfinity Negate(BreakInfinity v) { return v.Negate(); }
 		public BreakInfinity Negated() { return this.Neg(); }
 		public static BreakInfinity Negated(BreakInfinity v) { return v.Negated(); }
-		
+
 		public int Sgn()
 		{
 			return Math.Sign(this.mantissa);
 		}
-		
+
 		public static BreakInfinity Sgn(BreakInfinity v) { return v.Sgn(); }
 		public int Sign() { return this.Sgn(); }
 		public static BreakInfinity Sign(BreakInfinity v) { return v.Sign(); }
-		
+
 		public BreakInfinity Round()
 		{
 			if (this.exponent < -1)
@@ -304,9 +301,9 @@ namespace BreakInfinity
 			}
 			return this;
 		}
-		
+
 		public static BreakInfinity Round(BreakInfinity v) { return v.Round(); }
-		
+
 		public BreakInfinity Floor()
 		{
 			if (this.exponent < -1)
@@ -319,9 +316,9 @@ namespace BreakInfinity
 			}
 			return this;
 		}
-		
+
 		public static BreakInfinity Floor(BreakInfinity v) { return v.Floor(); }
-		
+
 		public BreakInfinity Ceiling()
 		{
 			if (this.exponent < -1)
@@ -334,11 +331,11 @@ namespace BreakInfinity
 			}
 			return this;
 		}
-		
+
 		public static BreakInfinity Ceiling(BreakInfinity v) { return v.Ceiling(); }
 		public BreakInfinity Ceil() { return Ceiling(); }
 		public static BreakInfinity Ceil(BreakInfinity v) { return v.Ceil(); }
-		
+
 		public BreakInfinity Truncate() {
 			if (this.exponent < 0)
 			{
@@ -350,21 +347,21 @@ namespace BreakInfinity
 			}
 			return this;
 		}
-		
+
 		public static BreakInfinity Truncate(BreakInfinity v) { return v.Truncate(); }
 		public BreakInfinity Trunc() { return Truncate(); }
 		public static BreakInfinity Trunc(BreakInfinity v) { return v.Trunc(); }
-		
+
 		public BreakInfinity Add(BreakInfinity value) {
 			//figure out which is bigger, shrink the mantissa of the smaller by the difference in exponents, add mantissas, normalize and return
-			
+
 			//TODO: Optimizations and simplification may be possible, see https://github.com/Patashu/break_infinity.js/issues/8
-			
+
 			if (this.mantissa == 0) { return value; }
 			if (value.mantissa == 0) { return this; }
 			if (!BreakInfinity.IsFinite(this.mantissa)) { return this; }
 			if (!BreakInfinity.IsFinite(value.mantissa)) { return value; }
-			
+
 			BreakInfinity biggerDecimal, smallerDecimal;
 			if (this.exponent >= value.exponent)
 			{
@@ -376,7 +373,7 @@ namespace BreakInfinity
 				biggerDecimal = value;
 				smallerDecimal = this;
 			}
-			
+
 			if (biggerDecimal.exponent - smallerDecimal.exponent > MAX_SIGNIFICANT_DIGITS)
 			{
 				return biggerDecimal;
@@ -390,7 +387,7 @@ namespace BreakInfinity
 				biggerDecimal.exponent-14);
 			}
 		}
-		
+
 		public BreakInfinity Add(double value) { return Add(new BreakInfinity(value)); }
 		public BreakInfinity Add(string value) { return Add(new BreakInfinity(value)); }
 		public static BreakInfinity Add(BreakInfinity a, BreakInfinity b) { return a.Add(b); }
@@ -407,7 +404,7 @@ namespace BreakInfinity
 		public BreakInfinity Minus(BreakInfinity value) { return Sub(value); }
 		public BreakInfinity Minus(double value) { return Sub(new BreakInfinity(value)); }
 		public BreakInfinity Minus(string value) { return Sub(new BreakInfinity(value)); }
-		
+
 		public BreakInfinity Mul(BreakInfinity value)
 		{
 			/*
@@ -416,7 +413,7 @@ namespace BreakInfinity
 			*/
 			return new BreakInfinity(this.mantissa*value.mantissa, this.exponent+value.exponent);
 		}
-		
+
 		public BreakInfinity Mul(double value) { return Mul(new BreakInfinity(value)); }
 		public BreakInfinity Mul(string value) { return Mul(new BreakInfinity(value)); }
 		public static BreakInfinity Mul(BreakInfinity a, BreakInfinity b) { return a.Mul(b); }
@@ -439,63 +436,63 @@ namespace BreakInfinity
 		public BreakInfinity DividedBy(BreakInfinity value) { return Div(value); }
 		public BreakInfinity DividedBy(double value) { return Div(new BreakInfinity(value)); }
 		public BreakInfinity DividedBy(string value) { return Div(new BreakInfinity(value)); }
-		
+
 		public BreakInfinity Recip()
 		{
 			return new BreakInfinity(1.0/this.mantissa, -this.exponent);
 		}
-		
+
 		public static BreakInfinity Recip(BreakInfinity v) { return v.Recip(); }
 		public BreakInfinity Reciprocal() { return Recip(); }
 		public static BreakInfinity Reciprocal(BreakInfinity v) { return v.Recip(); }
 		public BreakInfinity Reciprocate() { return Recip(); }
 		public static BreakInfinity Reciprocate(BreakInfinity v) { return v.Recip(); }
-		
+
 		public static implicit operator BreakInfinity(double value)
 		{
 			return new BreakInfinity(value);
 		}
-		
+
 		public static implicit operator BreakInfinity(String value)
 		{
 			return new BreakInfinity(value);
 		}
-		
+
 		public static implicit operator BreakInfinity(int value)
 		{
 			return new BreakInfinity(Convert.ToDouble(value));
 		}
-		
+
 		public static implicit operator BreakInfinity(long value)
 		{
 			return new BreakInfinity(Convert.ToDouble(value));
 		}
-		
+
 		public static implicit operator BreakInfinity(float value)
 		{
 			return new BreakInfinity(Convert.ToDouble(value));
 		}
-		
+
 		public static BreakInfinity operator +(BreakInfinity a, BreakInfinity b)
 		{
 			return a.Add(b);
 		}
-		
+
 		public static BreakInfinity operator -(BreakInfinity a, BreakInfinity b)
 		{
 			return a.Sub(b);
 		}
-		
+
 		public static BreakInfinity operator *(BreakInfinity a, BreakInfinity b)
 		{
 			return a.Mul(b);
 		}
-		
+
 		public static BreakInfinity operator /(BreakInfinity a, BreakInfinity b)
 		{
 			return a.Div(b);
 		}
-		
+
 		public static BreakInfinity FromValue(object value)
 		{
 			if (value is BreakInfinity) { return (BreakInfinity)value; }
@@ -506,16 +503,16 @@ namespace BreakInfinity
 			if (value is float) { return new BreakInfinity(Convert.ToDouble(value)); }
 			throw new Exception("I have no idea what to do with this: " + value.GetType().ToString());
 		}
-		
+
 		public int CompareTo(object other)
 		{
 			BreakInfinity value = BreakInfinity.FromValue(other);
-			
+
 			//TODO: sign(a-b) might be better? https://github.com/Patashu/break_infinity.js/issues/12
-			
+
 			/*
 			from smallest to largest:
-			
+
 			-3e100
 			-1e100
 			-3e99
@@ -537,9 +534,9 @@ namespace BreakInfinity
 			3e99
 			1e100
 			3e100
-			
+
 			*/
-			
+
 			if (this.mantissa == 0)
 			{
 				if (value.mantissa == 0) { return 0; }
@@ -551,7 +548,7 @@ namespace BreakInfinity
 				if (this.mantissa < 0) { return -1; }
 				if (this.mantissa > 0) { return 1; }
 			}
-			
+
 			if (this.mantissa > 0) //positive
 			{
 				if (value.mantissa < 0) { return 1; }
@@ -575,28 +572,28 @@ namespace BreakInfinity
 				return 0;
 			}
 		}
-		
+
 		public override bool Equals(object other)
 		{
 			BreakInfinity value = BreakInfinity.FromValue(other);
 			return this == value;
 		}
-		
+
 		public override int GetHashCode()
 		{
 			return mantissa.GetHashCode() + exponent.GetHashCode()*486187739;
 		}
-		
+
 		public static bool operator ==(BreakInfinity a, BreakInfinity b)
 		{
 			return a.exponent == b.exponent && a.mantissa == b.mantissa;
 		}
-		
+
 		public static bool operator !=(BreakInfinity a, BreakInfinity b)
 		{
 			return a.exponent != b.exponent || a.mantissa != b.mantissa;
 		}
-		
+
 		public static bool operator <(BreakInfinity a, BreakInfinity b)
 		{
 			if (a.mantissa == 0) return b.mantissa > 0;
@@ -605,7 +602,7 @@ namespace BreakInfinity
 			if (a.mantissa > 0) return b.mantissa > 0 && a.exponent < b.exponent;
 			return b.mantissa > 0 || a.exponent > b.exponent;
 		}
-		
+
 		public static bool operator <=(BreakInfinity a, BreakInfinity b)
 		{
 			if (a.mantissa == 0) return b.mantissa >= 0;
@@ -614,7 +611,7 @@ namespace BreakInfinity
 			if (a.mantissa > 0) return b.mantissa > 0 && a.exponent < b.exponent;
 			return b.mantissa > 0 || a.exponent > b.exponent;
 		}
-		
+
 		public static bool operator >(BreakInfinity a, BreakInfinity b)
 		{
 			if (a.mantissa == 0) return b.mantissa < 0;
@@ -623,7 +620,7 @@ namespace BreakInfinity
 			if (a.mantissa > 0) return b.mantissa < 0 || a.exponent > b.exponent;
 			return b.mantissa < 0 && a.exponent < b.exponent;
 		}
-		
+
 		public static bool operator >=(BreakInfinity a, BreakInfinity b)
 		{
 			if (a.mantissa == 0) return b.mantissa <= 0;
@@ -632,176 +629,176 @@ namespace BreakInfinity
 			if (a.mantissa > 0) return b.mantissa < 0 || a.exponent > b.exponent;
 			return b.mantissa < 0 && a.exponent < b.exponent;
 		}
-		
+
 		public BreakInfinity Max(BreakInfinity value)
 		{
 			if (this >= value) return this;
 			return value;
 		}
-		
+
 		public static BreakInfinity Max(BreakInfinity a, BreakInfinity b)
 		{
 			return a.Max(b);
 		}
-		
+
 		public BreakInfinity Min(BreakInfinity value)
 		{
 			if (this <= value) return this;
 			return value;
 		}
-		
+
 		public static BreakInfinity Min(BreakInfinity a, BreakInfinity b)
 		{
 			return a.Min(b);
 		}
-		
+
 		//tolerance is a relative tolerance, multiplied by the greater of the magnitudes of the two arguments. For example, if you put in 1e-9, then any number closer to the larger number than (larger number)*1e-9 will be considered equal.
 		public bool EqTolerance(BreakInfinity value, double tolerance = 1e-9)
 		{
 			// https://stackoverflow.com/a/33024979
 			//return abs(a-b) <= tolerance * max(abs(a), abs(b))
-			
+
 			return (this - value).Abs() <= BreakInfinity.Max(this.Abs(), value.Abs()).Mul(tolerance);
 		}
-		
+
 		public static bool EqTolerance(BreakInfinity a, BreakInfinity b, double tolerance = 1e-9)
 		{
 			return a.EqTolerance(b, tolerance);
 		}
-		
+
 		public int CmpTolerance(BreakInfinity value, double tolerance = 1e-9)
 		{
 			if (this.EqTolerance(value, tolerance)) { return 0; }
 			return this.CompareTo(value);
 		}
-		
+
 		public static int CmpTolerance(BreakInfinity a, BreakInfinity b, double tolerance = 1e-9)
 		{
 			return a.CmpTolerance(b, tolerance);
 		}
-		
+
 		public bool NeqTolerance(BreakInfinity value, double tolerance = 1e-9)
 		{
 			return !this.EqTolerance(value, tolerance);
 		}
-		
+
 		public static bool NeqTolerance(BreakInfinity a, BreakInfinity b, double tolerance = 1e-9)
 		{
 			return a.NeqTolerance(b, tolerance);
 		}
-		
+
 		public bool LtTolerance(BreakInfinity value, double tolerance = 1e-9)
 		{
 			if (this.EqTolerance(value, tolerance)) { return false; }
 			return this < value;
 		}
-		
+
 		public static bool LtTolerance(BreakInfinity a, BreakInfinity b, double tolerance = 1e-9)
 		{
 			return a.LtTolerance(b, tolerance);
 		}
-		
+
 		public bool LteTolerance(BreakInfinity value, double tolerance = 1e-9)
 		{
 			if (this.EqTolerance(value, tolerance)) { return true; }
 			return this < value;
 		}
-		
+
 		public static bool LteTolerance(BreakInfinity a, BreakInfinity b, double tolerance = 1e-9)
 		{
 			return a.LteTolerance(b, tolerance);
 		}
-		
+
 		public bool GtTolerance(BreakInfinity value, double tolerance = 1e-9)
 		{
 			if (this.EqTolerance(value, tolerance)) { return false; }
 			return this > value;
 		}
-		
+
 		public static bool GtTolerance(BreakInfinity a, BreakInfinity b, double tolerance = 1e-9)
 		{
 			return a.GtTolerance(b, tolerance);
 		}
-		
+
 		public bool GteTolerance(BreakInfinity value, double tolerance = 1e-9)
 		{
 			if (this.EqTolerance(value, tolerance)) { return true; }
 			return this > value;
 		}
-		
+
 		public static bool GteTolerance(BreakInfinity a, BreakInfinity b, double tolerance = 1e-9)
 		{
 			return a.GteTolerance(b, tolerance);
 		}
-		
+
 		public double AbsLog10()
 		{
 			return (double)this.exponent + Math.Log10(Math.Abs(this.mantissa));
 		}
-		
+
 		public double Log10()
 		{
 			return (double)this.exponent + Math.Log10(this.mantissa);
 		}
-		
+
 		public static double Log10(BreakInfinity value)
 		{
 			return value.Log10();
 		}
-		
+
 		public double Log(double b)
 		{
 			if (b == 0) { return Double.NaN; }
 			//UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater). We assume this to be true and thus only need to return a number, not a Decimal, and don't do any other kind of error checking.
 			return (2.30258509299404568402/Math.Log(b))*this.Log10();
 		}
-		
+
 		public static double Log(BreakInfinity value, double b)
 		{
 			return value.Log(b);
 		}
-		
+
 		public double Log2()
 		{
 			return 3.32192809488736234787*this.Log10();
 		}
-		
+
 		public static double Log2(BreakInfinity value)
 		{
 			return value.Log2();
 		}
-		
+
 		public double Ln()
 		{
 			return 2.30258509299404568402*this.Log10();
 		}
-		
+
 		public static double Ln(BreakInfinity value)
 		{
 			return value.Ln();
 		}
-		
+
 		public double Logarithm(double b)
 		{
 			return this.Log(b);
 		}
-		
+
 		public static double Logarithm(BreakInfinity value, double b)
 		{
 			return value.Logarithm(b);
 		}
-		
+
 		public BreakInfinity Pow(BreakInfinity value)
 		{
 			return Pow(value.ToDouble());
 		}
-		
+
 		public BreakInfinity Pow(double value)
 		{
 			//UN-SAFETY: Accuracy not guaranteed beyond ~9~11 decimal places.
-			
+
 			//TODO: Fast track seems about neutral for performance. It might become faster if an integer pow is implemented, or it might not be worth doing (see https://github.com/Patashu/break_infinity.js/issues/4 )
-			
+
 			//Fast track: If (this.exponent*value) is an integer and mantissa^value fits in a Number, we can do a very fast method.
 			var temp = this.exponent*value;
 			double newMantissa = Double.NaN;
@@ -813,9 +810,9 @@ namespace BreakInfinity
 					return new BreakInfinity(newMantissa, (long)temp);
 				}
 			}
-			
+
 			//Same speed and usually more accurate. (An arbitrary-precision version of this calculation is used in break_break_infinity.js, sacrificing performance for utter accuracy.)
-			
+
 			var newexponent = Math.Truncate(temp);
 			var residue = temp-newexponent;
 			newMantissa = Math.Pow(10, value*Math.Log10(this.mantissa)+residue);
@@ -823,7 +820,7 @@ namespace BreakInfinity
 			{
 				return new BreakInfinity(newMantissa, (long)newexponent);
 			}
-			
+
 			//UN-SAFETY: This should return NaN when mantissa is negative and value is noninteger.
 			BreakInfinity result = BreakInfinity.Pow10(value*this.AbsLog10()); //this is 2x faster and gives same values AFAIK
 			if (this.Sign() == -1 && value % 2 == 1)
@@ -832,7 +829,7 @@ namespace BreakInfinity
 			}
 			return result;
 		}
-		
+
 		public static BreakInfinity Pow10(double value)
 		{
 			if (value == Math.Truncate(value))
@@ -841,94 +838,94 @@ namespace BreakInfinity
 			}
 			return new BreakInfinity(Math.Pow(10,value%1), (long)Math.Truncate(value));
 		}
-		
+
 		public BreakInfinity PowBase(BreakInfinity value)
 		{
 			return value.Pow(this);
 		}
-		
+
 		public static BreakInfinity Pow(BreakInfinity value, BreakInfinity other)
 		{
 			return BreakInfinity.Pow(value, other.ToDouble());
 		}
-		
+
 		public static BreakInfinity Pow(BreakInfinity value, double other)
 		{
 			//Fast track: 10^integer
 			if (value == 10 && other == Math.Truncate(other)) { return new BreakInfinity(1, (long)other); }
-			
+
 			return value.Pow(other);
 		}
-		
+
 		public BreakInfinity Factorial()
 		{
 			//Using Stirling's Approximation. https://en.wikipedia.org/wiki/Stirling%27s_approximation#Versions_suitable_for_calculators
-			
+
 			var n = this.ToDouble() + 1;
-			
+
 			return BreakInfinity.Pow((n/2.71828182845904523536)*Math.Sqrt(n*Math.Sinh(1/n)+1/(810*Math.Pow(n, 6))), n).Mul(Math.Sqrt(2*3.141592653589793238462/n));
 		}
-		
+
 		public BreakInfinity Exp()
 		{
 			return BreakInfinity.Pow(2.71828182845904523536, this);
 		}
-		
+
 		public static BreakInfinity Exp(BreakInfinity value)
 		{
 			return value.Exp();
 		}
-		
+
 		public BreakInfinity Sqr()
 		{
 			return new BreakInfinity(Math.Pow(this.mantissa, 2), this.exponent*2);
 		}
-		
+
 		public static BreakInfinity Sqr(BreakInfinity value)
 		{
 			return value.Sqr();
 		}
-		
+
 		public BreakInfinity Sqrt()
 		{
 			if (this.mantissa < 0) { return new BreakInfinity(Double.NaN); }
 			if (this.exponent % 2 != 0) { return new BreakInfinity(Math.Sqrt(this.mantissa)*3.16227766016838, (long)Math.Floor((double)this.exponent/2)); } //mod of a negative number is negative, so != means '1 or -1'
 			return new BreakInfinity(Math.Sqrt(this.mantissa), (long)Math.Floor((double)this.exponent/2));
 		}
-		
+
 		public static BreakInfinity Sqrt(BreakInfinity value)
 		{
 			return value.Sqrt();
 		}
-		
+
 		public BreakInfinity Cube()
 		{
 			return new BreakInfinity(Math.Pow(this.mantissa, 3), this.exponent*3);
 		}
-		
+
 		public static BreakInfinity Cube(BreakInfinity value)
 		{
 			return value.Cube();
 		}
-		
+
 		public BreakInfinity Cbrt()
 		{
 			var sign = 1;
 			var mantissa = this.mantissa;
 			if (mantissa < 0) { sign = -1; mantissa = -mantissa; };
 			var newmantissa = sign*Math.Pow(mantissa, (1/3));
-			
+
 			var mod = this.exponent % 3;
 			if (mod == 1 || mod == -1) { return new BreakInfinity(newmantissa*2.1544346900318837, (long)Math.Floor((double)this.exponent/3)); }
 			if (mod != 0) { return new BreakInfinity(newmantissa*4.6415888336127789, (long)Math.Floor((double)this.exponent/3)); } //mod != 0 at this point means 'mod == 2 || mod == -2'
 			return new BreakInfinity(newmantissa, (long)Math.Floor((double)this.exponent/3));
 		}
-		
+
 		public static BreakInfinity Cbrt(BreakInfinity value)
 		{
 			return value.Cbrt();
 		}
-		
+
 		//Some hyperbolic trig functions that happen to be easy
 		public BreakInfinity Sinh()
 		{
@@ -955,81 +952,81 @@ namespace BreakInfinity
 			if (this.Abs() >= 1) return Double.NaN;
 			return BreakInfinity.Ln(this.Add(1).Div(new BreakInfinity(1).Sub(this)))/2;
 		}
-		
+
 		//If you're willing to spend 'resourcesAvailable' and want to buy something with exponentially increasing cost each purchase (start at priceStart, multiply by priceRatio, already own currentOwned), how much of it can you buy? Adapted from Trimps source code.
 		public static BreakInfinity AffordGeometricSeries(BreakInfinity resourcesAvailable, BreakInfinity priceStart, BreakInfinity priceRatio, BreakInfinity currentOwned)
 		{
 			var actualStart = priceStart.Mul(BreakInfinity.Pow(priceRatio, currentOwned));
-			
+
 			//return Math.floor(log10(((resourcesAvailable / (priceStart * Math.pow(priceRatio, currentOwned))) * (priceRatio - 1)) + 1) / log10(priceRatio));
-		
+
 			return BreakInfinity.Floor(BreakInfinity.Log10(((resourcesAvailable.Div(actualStart)).Mul((priceRatio.Sub(1)))).Add(1)) / (BreakInfinity.Log10(priceRatio)));
 		}
-		
+
 		//How much resource would it cost to buy (numItems) items if you already have currentOwned, the initial price is priceStart and it multiplies by priceRatio each purchase?
 		public static BreakInfinity SumGeometricSeries(BreakInfinity numItems, BreakInfinity priceStart, BreakInfinity priceRatio, BreakInfinity currentOwned)
 		{
 			var actualStart = priceStart.Mul(BreakInfinity.Pow(priceRatio, currentOwned));
-			
+
 			return (actualStart.Mul(BreakInfinity.Sub(1,BreakInfinity.Pow(priceRatio,numItems)))).Div(BreakInfinity.Sub(1,priceRatio));
 		}
-		
+
 		//If you're willing to spend 'resourcesAvailable' and want to buy something with additively increasing cost each purchase (start at priceStart, add by priceAdd, already own currentOwned), how much of it can you buy?
 		public static BreakInfinity AffordArithmeticSeries(BreakInfinity resourcesAvailable, BreakInfinity priceStart, BreakInfinity priceAdd, BreakInfinity currentOwned)
 		{
 			var actualStart = priceStart.Add(BreakInfinity.Mul(currentOwned, priceAdd));
-			
+
 			//n = (-(a-d/2) + sqrt((a-d/2)^2+2dS))/d
 			//where a is actualStart, d is priceAdd and S is resourcesAvailable
 			//then floor it and you're done!
-			
+
 			var b = actualStart.Sub(priceAdd.Div(2));
 			var b2 = b.Pow(2);
-			
+
 			return BreakInfinity.Floor(
 			(b.Neg().Add(BreakInfinity.Sqrt(b2.Add(BreakInfinity.Mul(priceAdd, resourcesAvailable).Mul(2))))
 			).Div(priceAdd)
 			);
 		}
-		
+
 		//How much resource would it cost to buy (numItems) items if you already have currentOwned, the initial price is priceStart and it adds priceAdd each purchase? Adapted from http://www.mathwords.com/a/arithmetic_series.htm
 		public static BreakInfinity SumArithmeticSeries(BreakInfinity numItems, BreakInfinity priceStart, BreakInfinity priceAdd, BreakInfinity currentOwned)
 		{
 			var actualStart = priceStart.Add(BreakInfinity.Mul(currentOwned, priceAdd));
-			
+
 			//(n/2)*(2*a+(n-1)*d)
-			
+
 			return BreakInfinity.Div(numItems, 2).Mul(BreakInfinity.Mul(2, actualStart).Add(numItems.Sub(1).Mul(priceAdd)));
 		}
-		
+
 		//Joke function from Realm Grinder
 		public BreakInfinity ascensionPenalty(double ascensions)
 		{
 			if (ascensions == 0) return this;
 			return this.Pow(Math.Pow(10, -ascensions));
 		}
-		
+
 		//When comparing two purchases that cost (resource) and increase your resource/sec by (delta_RpS), the lowest efficiency score is the better one to purchase. From Frozen Cookies: http://cookieclicker.wikia.com/wiki/Frozen_Cookies_(JavaScript_Add-on)#Efficiency.3F_What.27s_that.3F
 		public static BreakInfinity EfficiencyOfPurchase(BreakInfinity cost, BreakInfinity current_RpS, BreakInfinity delta_RpS)
 		{
 			return BreakInfinity.Add(cost.Div(current_RpS), cost.Div(delta_RpS));
 		}
-		
+
 		//Joke function from Cookie Clicker. It's 'egg'
 		public BreakInfinity egg() { return this.Add(9); }
-        
-        //  Porting some function from Decimal.js 
+
+        //  Porting some function from Decimal.js
         public bool lessThanOrEqualTo(BreakInfinity other) {return this.CompareTo(other) < 1; }
         public bool lessThan(BreakInfinity other) {return this.CompareTo(other) < 0; }
         public bool greaterThanOrEqualTo(BreakInfinity other) { return this.CompareTo(other) > -1; }
         public bool greaterThan(BreakInfinity other) {return this.CompareTo(other) > 0; }
-		
+
 		static Random random = new System.Random();
 
 		public static BreakInfinity RandomDecimalForTesting(double absMaxExponent)
 		{
 			var random = BreakInfinity.random;
-			
+
 			//NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
 			//5% of the time, have a mantissa of 0
 			if (random.NextDouble()*20 < 1) { return new BreakInfinity(0, 0); }
@@ -1039,11 +1036,11 @@ namespace BreakInfinity
 			mantissa *= Math.Sign(random.NextDouble()*2-1);
 			var exponent = (long)(Math.Floor(random.NextDouble()*absMaxExponent*2) - absMaxExponent);
 			return new BreakInfinity(mantissa, exponent);
-			
+
 			/*
 Examples:
 randomly test pow:
-			
+
 var a = Decimal.randomDecimalForTesting(1000);
 var pow = Math.random()*20-10;
 if (Math.random()*2 < 1) { pow = Math.round(pow); }
@@ -1056,92 +1053,6 @@ var c = a.mul(b);
 var result = a.add(c);
 [a.toString() + "+" + c.toString(), result.toString()]
 			*/
-		}
-    }
-}
-    
-namespace Rextester
-{
-	using BreakInfinity;
-	using System.Globalization;
-	
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            Console.WriteLine(new BreakInfinity("1.23456789e1234").MantissaWithDecimalPlaces(0));
-            Console.WriteLine(new BreakInfinity("1.23456789e1234").MantissaWithDecimalPlaces(4));
-            Console.WriteLine("...");
-            Console.WriteLine(new BreakInfinity("1.23456789e1234").ToString());
-			Console.WriteLine("...");
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").ToExponential(0));
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").ToExponential(4));
-			Console.WriteLine(new BreakInfinity("1.23456789e3").ToExponential(0));
-			Console.WriteLine(new BreakInfinity("1.23456789e3").ToExponential(4));
-			Console.WriteLine("...");
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").ToFixed(0));
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").ToFixed(4));
-			Console.WriteLine(new BreakInfinity("1.23456789e3").ToFixed(0));
-			Console.WriteLine(new BreakInfinity("1.23456789e3").ToFixed(4));
-			Console.WriteLine("...");
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").ToPrecision(0));
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").ToPrecision(4));
-			Console.WriteLine(new BreakInfinity("1.23456789e3").ToPrecision(0));
-			Console.WriteLine(new BreakInfinity("1.23456789e3").ToPrecision(4));
-			Console.WriteLine("...");
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").Add(new BreakInfinity("1.23456789e1234")));
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").Add(new BreakInfinity("1.23456789e123")));
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").Add(new BreakInfinity("1.23456789e1233")));
-			Console.WriteLine(new BreakInfinity("1.23456789e1234").Add(new BreakInfinity("-1.23456789e1234")));
-			Console.WriteLine(new BreakInfinity(299).Add(new BreakInfinity(18)));
-			Console.WriteLine("...");
-			Console.WriteLine(new BreakInfinity(299).CompareTo(300));
-			Console.WriteLine(new BreakInfinity(299).CompareTo(new BreakInfinity(299)));
-			Console.WriteLine(new BreakInfinity(299).CompareTo("298"));
-			Console.WriteLine(new BreakInfinity(0).CompareTo(0.0));
-			Console.WriteLine("...");
-			Console.WriteLine(new BreakInfinity(300).EqTolerance(new BreakInfinity(300), 1e-9));
-			Console.WriteLine(new BreakInfinity(300).EqTolerance(new BreakInfinity(300.0000005), 1e-9));
-			Console.WriteLine(new BreakInfinity(300).EqTolerance(new BreakInfinity(300.00000002), 1e-9));
-			Console.WriteLine(new BreakInfinity(300).EqTolerance(new BreakInfinity(300.0000005), 1e-8));
-			
-			for (var i = 0; i < 10000; ++i)
-			{
-				var a = BreakInfinity.RandomDecimalForTesting(100);
-				var b = BreakInfinity.RandomDecimalForTesting(100);
-				var aDouble = a.ToDouble();
-				var bDouble = b.ToDouble();
-				var smallNumber = BreakInfinity.RandomDecimalForTesting(2);
-				var smallDouble = smallNumber.ToDouble();
-				Assert(a.ToString() + "+" + b.ToString() + "=" + (a+b).ToString(), EqualEnough(a+b, aDouble+bDouble));
-				Assert(a.ToString() + "-" + b.ToString() + "=" + (a-b).ToString(), EqualEnough(a-b, aDouble-bDouble));
-				Assert(a.ToString() + "*" + b.ToString() + "=" + (a*b).ToString(), EqualEnough(a*b, aDouble*bDouble));
-				Assert(a.ToString() + "/" + b.ToString() + "=" + (a/b).ToString(), EqualEnough(a/b, aDouble/bDouble));
-				Assert(a.ToString() + " cmp " + b.ToString() + " = " + (a.CompareTo(b)), a.CompareTo(b) == aDouble.CompareTo(bDouble));
-				Assert(a.ToString() + " log " + smallNumber.ToString() + " = " + (a.Log(smallDouble).ToString()), EqualEnough(a.Log(smallDouble), Math.Log(aDouble, smallDouble)));
-				Assert(a.ToString() + " pow " + smallNumber.ToString() + " = " + (a.Pow(smallDouble).ToString()), EqualEnough(a.Pow(smallDouble), Math.Pow(aDouble, smallDouble)));
-			}
-        }
-		
-		public static bool EqualEnough(BreakInfinity a, double b)
-		{
-			try
-			{
-				return (!BreakInfinity.IsFinite(a.ToDouble()) && !BreakInfinity.IsFinite(b)) || a.EqTolerance(b) || Math.Abs(a.exponent) > 300;
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(a.ToString() + ", " + b.ToString(CultureInfo.InvariantCulture) + ", " + e.ToString());
-				return false;
-			}
-		}
-		
-		public static void Assert(string message, bool result)
-		{
-			if (!result)
-			{
-				Console.WriteLine(message);
-			}
 		}
     }
 }
