@@ -16,19 +16,6 @@ namespace BreakInfinity
         //The smallest exponent that can appear in a Double, though not all mantissas are valid here.
         private const long DoubleExpMin = -324;
 
-        //we need this lookup table because Math.pow(10, exponent) when exponent's absolute value is large is slightly inaccurate. you can fix it with the power of math... or just make a lookup table. faster AND simpler
-        private static readonly double[] PowersOf10 = new double[632];
-
-        static BigDouble()
-        {
-            var iActual = 0;
-            for (var i = DoubleExpMin + 1; i <= DoubleExpMax; i++)
-            {
-                PowersOf10[iActual] = double.Parse("1e" + i, CultureInfo.InvariantCulture);
-                ++iActual;
-            }
-        }
-
         private const int Indexof0Inpowersof10 = 323;
 
         public BigDouble(double mantissa, long exponent, bool normalize = true)
@@ -45,7 +32,7 @@ namespace BreakInfinity
             else
             {
                 var tempExponent = (long)Math.Floor(Math.Log10(Math.Abs(mantissa)));
-                Mantissa = mantissa / PowersOf10[tempExponent + Indexof0Inpowersof10];
+                Mantissa = mantissa / PowersOf10.Lookup[tempExponent + Indexof0Inpowersof10];
                 Exponent = exponent + tempExponent;
             }
         }
@@ -86,7 +73,7 @@ namespace BreakInfinity
                 }
                 else
                 {
-                    mantissa = value / PowersOf10[exponent + Indexof0Inpowersof10];
+                    mantissa = value / PowersOf10.Lookup[exponent + Indexof0Inpowersof10];
                 }
 
                 this = new BigDouble(mantissa, exponent);
@@ -158,7 +145,7 @@ namespace BreakInfinity
 
             //var result = this.mantissa*Math.pow(10, this.exponent);
 
-            if (Exponent == long.MinValue)
+            if (IsNaN(this))
             {
                 return double.NaN;
             }
@@ -179,7 +166,7 @@ namespace BreakInfinity
                 return Mantissa > 0 ? 5e-324 : -5e-324;
             }
 
-            var result = Mantissa * PowersOf10[Exponent + Indexof0Inpowersof10];
+            var result = Mantissa * PowersOf10.Lookup[Exponent + Indexof0Inpowersof10];
             if (!IsFinite(result) || Exponent < 0)
             {
                 return result;
@@ -444,7 +431,7 @@ namespace BreakInfinity
             //Example: 299 + 18
             return new BigDouble(
                 Math.Round(1e14 * biggerDecimal.Mantissa + 1e14 * smallerDecimal.Mantissa *
-                           PowersOf10[smallerDecimal.Exponent - biggerDecimal.Exponent + Indexof0Inpowersof10]),
+                           PowersOf10.Lookup[smallerDecimal.Exponent - biggerDecimal.Exponent + Indexof0Inpowersof10]),
                 biggerDecimal.Exponent - 14);
         }
 
@@ -993,6 +980,26 @@ namespace BreakInfinity
         public static bool IsFinite(double value)
         {
             return !(double.IsNaN(value) || double.IsInfinity(value));
+        }
+
+        /// <summary>
+        /// We need this lookup table because Math.pow(10, exponent) when exponent's absolute value
+        /// is large is slightly inaccurate. you can fix it with the power of math... or just make
+        /// a lookup table. Faster AND simpler.
+        /// </summary>
+        private static class PowersOf10
+        {
+            public static double[] Lookup { get; } = new double[632];
+
+            static PowersOf10()
+            {
+                var iActual = 0;
+                for (var i = DoubleExpMin + 1; i <= DoubleExpMax; i++)
+                {
+                    Lookup[iActual] = double.Parse("1e" + i, CultureInfo.InvariantCulture);
+                    ++iActual;
+                }
+            }
         }
     }
 
