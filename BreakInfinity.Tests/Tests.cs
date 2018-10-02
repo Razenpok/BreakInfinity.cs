@@ -7,8 +7,8 @@ namespace BreakInfinity.Tests
     [TestFixture]
     public class Tests
     {
-        public static BigDouble TestValueExponent4 = new BigDouble("1.23456789e1234");
-        public static BigDouble TestValueExponent1 = new BigDouble("1.234567893e3");
+        public static BigDouble TestValueExponent4 = BigDouble.Parse("1.23456789e1234");
+        public static BigDouble TestValueExponent1 = BigDouble.Parse("1.234567893e3");
 
         [Test]
         public void TestMantissaWithDecimalPlaces()
@@ -59,16 +59,16 @@ namespace BreakInfinity.Tests
             var addSelf = TestValueExponent4 + TestValueExponent4;
             Assert.That(addSelf.Mantissa, Is.EqualTo(TestValueExponent4.Mantissa * 2));
             Assert.That(addSelf.Exponent, Is.EqualTo(TestValueExponent4.Exponent));
-            var oneExponentLess = new BigDouble("1.23456789e1233");
+            var oneExponentLess = BigDouble.Parse("1.23456789e1233");
             var addOneExponentLess = TestValueExponent4 + oneExponentLess;
             var expectedMantissa = TestValueExponent4.Mantissa + oneExponentLess.Mantissa / 10;
             Assert.That(addOneExponentLess.Mantissa, Is.EqualTo(expectedMantissa));
             Assert.That(addOneExponentLess.Exponent, Is.EqualTo(TestValueExponent4.Exponent));
-            var aLotSmaller = new BigDouble("1.23456789e123");
+            var aLotSmaller = BigDouble.Parse("1.23456789e123");
             var addALotSmaller = TestValueExponent4 + aLotSmaller;
             Assert.That(addALotSmaller.Mantissa, Is.EqualTo(TestValueExponent4.Mantissa));
             Assert.That(addALotSmaller.Exponent, Is.EqualTo(TestValueExponent4.Exponent));
-            var negative = new BigDouble("-1.23456789e1234");
+            var negative = BigDouble.Parse("-1.23456789e1234");
             var addNegative = TestValueExponent4 + negative;
             Assert.That(addNegative.Mantissa, Is.EqualTo(0));
             Assert.That(addNegative.Exponent, Is.EqualTo(0));
@@ -89,9 +89,9 @@ namespace BreakInfinity.Tests
         [Test]
         public void TestEqTolerance()
         {
-            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300), 1E-09), Is.True);
-            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.0000005), 1E-09), Is.False);
-            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.00000002), 1E-09), Is.True);
+            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300)), Is.True);
+            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.0000005)), Is.False);
+            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.00000002)), Is.True);
             Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.0000005), 1e-8), Is.True);
         }
 
