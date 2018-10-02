@@ -56,23 +56,23 @@ namespace BreakInfinity.Tests
         [Test]
         public void TestAdd()
         {
-            var addSelf = TestValueExponent4.Add(TestValueExponent4);
+            var addSelf = TestValueExponent4 + TestValueExponent4;
             Assert.That(addSelf.Mantissa, Is.EqualTo(TestValueExponent4.Mantissa * 2));
             Assert.That(addSelf.Exponent, Is.EqualTo(TestValueExponent4.Exponent));
             var oneExponentLess = new BigDouble("1.23456789e1233");
-            var addOneExponentLess = TestValueExponent4.Add(oneExponentLess);
+            var addOneExponentLess = TestValueExponent4 + oneExponentLess;
             var expectedMantissa = TestValueExponent4.Mantissa + oneExponentLess.Mantissa / 10;
             Assert.That(addOneExponentLess.Mantissa, Is.EqualTo(expectedMantissa));
             Assert.That(addOneExponentLess.Exponent, Is.EqualTo(TestValueExponent4.Exponent));
             var aLotSmaller = new BigDouble("1.23456789e123");
-            var addALotSmaller = TestValueExponent4.Add(aLotSmaller);
+            var addALotSmaller = TestValueExponent4 + aLotSmaller;
             Assert.That(addALotSmaller.Mantissa, Is.EqualTo(TestValueExponent4.Mantissa));
             Assert.That(addALotSmaller.Exponent, Is.EqualTo(TestValueExponent4.Exponent));
             var negative = new BigDouble("-1.23456789e1234");
-            var addNegative = TestValueExponent4.Add(negative);
+            var addNegative = TestValueExponent4 + negative;
             Assert.That(addNegative.Mantissa, Is.EqualTo(0));
             Assert.That(addNegative.Exponent, Is.EqualTo(0));
-            var addSmallNumbers = new BigDouble(299).Add(new BigDouble(18));
+            var addSmallNumbers = new BigDouble(299) + new BigDouble(18);
             Assert.That(addSmallNumbers.Mantissa, Is.EqualTo(3.17));
             Assert.That(addSmallNumbers.Exponent, Is.EqualTo(2));
         }
@@ -89,10 +89,10 @@ namespace BreakInfinity.Tests
         [Test]
         public void TestEqTolerance()
         {
-            Assert.That(new BigDouble(300).EqTolerance(new BigDouble(300)), Is.True);
-            Assert.That(new BigDouble(300).EqTolerance(new BigDouble(300.0000005)), Is.False);
-            Assert.That(new BigDouble(300).EqTolerance(new BigDouble(300.00000002)), Is.True);
-            Assert.That(new BigDouble(300).EqTolerance(new BigDouble(300.0000005), 1e-8), Is.True);
+            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300), 1E-09), Is.True);
+            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.0000005), 1E-09), Is.False);
+            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.00000002), 1E-09), Is.True);
+            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.0000005), 1e-8), Is.True);
         }
 
         [Test]
@@ -108,10 +108,10 @@ namespace BreakInfinity.Tests
             AssertEqual(first * second, aDouble * bDouble);
             AssertEqual(first / second, aDouble / bDouble);
             Assert.That(first.CompareTo(second), Is.EqualTo(aDouble.CompareTo(bDouble)));
-            var smallNumber = BigDouble.RandomDecimalForTesting(2).Abs();
+            var smallNumber = BigDouble.Abs(BigDouble.RandomDecimalForTesting(2));
             var smallDouble = Math.Abs(smallNumber.ToDouble());
-            AssertEqual(first.Log(smallDouble), Math.Log(aDouble, smallDouble));
-            AssertEqual(first.Pow(smallDouble), Math.Pow(aDouble, smallDouble));
+            AssertEqual(BigDouble.Log(first, smallDouble), Math.Log(aDouble, smallDouble));
+            AssertEqual(BigDouble.Pow(first, smallDouble), Math.Pow(aDouble, smallDouble));
         }
 
         private static void AssertEqual(BigDouble a, double b)
@@ -122,7 +122,7 @@ namespace BreakInfinity.Tests
             }
 
             if (!BigDouble.IsFinite(b)) return;
-            Assert.That(a.EqTolerance(b), Is.True);
+            Assert.That(BigDouble.EqTolerance(a, b), Is.True);
         }
     }
 }
