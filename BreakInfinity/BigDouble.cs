@@ -16,8 +16,6 @@ namespace BreakInfinity
         //The smallest exponent that can appear in a Double, though not all mantissas are valid here.
         private const long DoubleExpMin = -324;
 
-        private const int Indexof0Inpowersof10 = 323;
-
         public BigDouble(double mantissa, long exponent, bool normalize = true)
         {
             if (!normalize || mantissa >= 1 && mantissa < 10 || !IsFinite(mantissa))
@@ -32,7 +30,7 @@ namespace BreakInfinity
             else
             {
                 var tempExponent = (long)Math.Floor(Math.Log10(Math.Abs(mantissa)));
-                Mantissa = mantissa / PowersOf10.Lookup[tempExponent + Indexof0Inpowersof10];
+                Mantissa = mantissa / PowersOf10.Lookup(tempExponent);
                 Exponent = exponent + tempExponent;
             }
         }
@@ -73,7 +71,7 @@ namespace BreakInfinity
                 }
                 else
                 {
-                    mantissa = value / PowersOf10.Lookup[exponent + Indexof0Inpowersof10];
+                    mantissa = value / PowersOf10.Lookup(exponent);
                 }
 
                 this = new BigDouble(mantissa, exponent);
@@ -166,7 +164,7 @@ namespace BreakInfinity
                 return Mantissa > 0 ? 5e-324 : -5e-324;
             }
 
-            var result = Mantissa * PowersOf10.Lookup[Exponent + Indexof0Inpowersof10];
+            var result = Mantissa * PowersOf10.Lookup(Exponent);
             if (!IsFinite(result) || Exponent < 0)
             {
                 return result;
@@ -431,7 +429,7 @@ namespace BreakInfinity
             //Example: 299 + 18
             return new BigDouble(
                 Math.Round(1e14 * biggerDecimal.Mantissa + 1e14 * smallerDecimal.Mantissa *
-                           PowersOf10.Lookup[smallerDecimal.Exponent - biggerDecimal.Exponent + Indexof0Inpowersof10]),
+                           PowersOf10.Lookup(smallerDecimal.Exponent - biggerDecimal.Exponent)),
                 biggerDecimal.Exponent - 14);
         }
 
@@ -908,16 +906,22 @@ namespace BreakInfinity
         /// </summary>
         private static class PowersOf10
         {
-            public static double[] Lookup { get; } = new double[632];
+            private static double[] Powers { get; } = new double[DoubleExpMax - DoubleExpMin];
+
+            private const long IndexOf0 = -DoubleExpMin - 1;
 
             static PowersOf10()
             {
-                var iActual = 0;
-                for (var i = DoubleExpMin + 1; i <= DoubleExpMax; i++)
+                var index = 0;
+                for (var i = 0; i < Powers.Length; i++)
                 {
-                    Lookup[iActual] = double.Parse("1e" + i, CultureInfo.InvariantCulture);
-                    ++iActual;
+                    Powers[index++] = double.Parse("1e" + (i - IndexOf0), CultureInfo.InvariantCulture);
                 }
+            }
+
+            public static double Lookup(long power)
+            {
+                return Powers[IndexOf0 + power];
             }
         }
     }
