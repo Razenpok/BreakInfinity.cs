@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace BreakInfinity
 {
-    public struct BigDouble : IComparable
+    public struct BigDouble : IComparable, IComparable<BigDouble>, IEquatable<BigDouble>
     {
         //for example: if two exponents are more than 17 apart, consider adding them together pointless, just return the larger one
         private const int MaxSignificantDigits = 17;
@@ -525,117 +525,31 @@ namespace BreakInfinity
 
         public int CompareTo(object other)
         {
-            var value = FromValue(other);
+            return CompareTo(FromValue(other));
+        }
 
-            //TODO: sign(a-right) might be better? https://github.com/Patashu/break_infinity.js/issues/12
-
-            if (IsZero(Mantissa))
-            {
-                if (IsZero(value.Mantissa))
-                {
-                    return 0;
-                }
-
-                if (value.Mantissa < 0)
-                {
-                    return 1;
-                }
-
-                if (value.Mantissa > 0)
-                {
-                    return -1;
-                }
-            }
-            else if (IsZero(value.Mantissa))
-            {
-                if (Mantissa < 0)
-                {
-                    return -1;
-                }
-
-                if (Mantissa > 0)
-                {
-                    return 1;
-                }
-            }
-
-            if (Mantissa > 0) //positive
-            {
-                if (value.Mantissa < 0)
-                {
-                    return 1;
-                }
-
-                if (Exponent > value.Exponent)
-                {
-                    return 1;
-                }
-
-                if (Exponent < value.Exponent)
-                {
-                    return -1;
-                }
-
-                if (Mantissa > value.Mantissa)
-                {
-                    return 1;
-                }
-
-                if (Mantissa < value.Mantissa)
-                {
-                    return -1;
-                }
-
-                return 0;
-            }
-
-            if (Mantissa < 0) // negative
-            {
-                if (value.Mantissa > 0)
-                {
-                    return -1;
-                }
-
-                if (Exponent > value.Exponent)
-                {
-                    return -1;
-                }
-
-                if (Exponent < value.Exponent)
-                {
-                    return 1;
-                }
-
-                if (Mantissa > value.Mantissa)
-                {
-                    return 1;
-                }
-
-                if (Mantissa < value.Mantissa)
-                {
-                    return -1;
-                }
-
-                return 0;
-            }
-
-            return 0;
+        public int CompareTo(BigDouble other)
+        {
+            var mantissaComparison = Mantissa.CompareTo(other.Mantissa);
+            return mantissaComparison != 0 ? mantissaComparison : Exponent.CompareTo(other.Exponent);
         }
 
         public override bool Equals(object other)
         {
-            var value = FromValue(other);
-            return this == value;
+            return Equals(FromValue(other));
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Mantissa.GetHashCode() * 397) ^ Exponent.GetHashCode();
+            }
         }
 
         public bool Equals(BigDouble other)
         {
             return Exponent == other.Exponent && AreEqual(Mantissa, other.Mantissa);
-        }
-
-        public override int GetHashCode()
-        {
-            return Mantissa.GetHashCode() + Exponent.GetHashCode() * 486187739;
         }
 
         public static bool operator ==(BigDouble left, BigDouble right)
