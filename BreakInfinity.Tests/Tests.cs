@@ -1,106 +1,128 @@
 ﻿using System;
-using System.Globalization;
+using System.Text;
+using NUnit.Framework;
 
 namespace BreakInfinity.Tests
 {
+    [TestFixture]
     public class Tests
     {
-        public static void Main()
-        {
-            Console.WriteLine(new BigDouble("1.23456789e1234").MantissaWithDecimalPlaces(0));
-            Console.WriteLine(new BigDouble("1.23456789e1234").MantissaWithDecimalPlaces(4));
-            Console.WriteLine("...");
-            Console.WriteLine(new BigDouble("1.23456789e1234").ToString());
-            Console.WriteLine("...");
-            Console.WriteLine(new BigDouble("1.23456789e1234").ToExponential(0));
-            Console.WriteLine(new BigDouble("1.23456789e1234").ToExponential(4));
-            Console.WriteLine(new BigDouble("1.23456789e3").ToExponential(0));
-            Console.WriteLine(new BigDouble("1.23456789e3").ToExponential(4));
-            Console.WriteLine("...");
-            Console.WriteLine(new BigDouble("1.23456789e1234").ToFixed(0));
-            Console.WriteLine(new BigDouble("1.23456789e1234").ToFixed(4));
-            Console.WriteLine(new BigDouble("1.23456789e3").ToFixed(0));
-            Console.WriteLine(new BigDouble("1.23456789e3").ToFixed(4));
-            Console.WriteLine("...");
-            Console.WriteLine(new BigDouble("1.23456789e1234").ToPrecision(0));
-            Console.WriteLine(new BigDouble("1.23456789e1234").ToPrecision(4));
-            Console.WriteLine(new BigDouble("1.23456789e3").ToPrecision(0));
-            Console.WriteLine(new BigDouble("1.23456789e3").ToPrecision(4));
-            Console.WriteLine("...");
-            Console.WriteLine(
-                new BigDouble("1.23456789e1234").Add(
-                    new BigDouble("1.23456789e1234")));
-            Console.WriteLine(
-                new BigDouble("1.23456789e1234").Add(
-                    new BigDouble("1.23456789e123")));
-            Console.WriteLine(
-                new BigDouble("1.23456789e1234").Add(
-                    new BigDouble("1.23456789e1233")));
-            Console.WriteLine(
-                new BigDouble("1.23456789e1234").Add(
-                    new BigDouble("-1.23456789e1234")));
-            Console.WriteLine(new BigDouble(299).Add(new BigDouble(18)));
-            Console.WriteLine("...");
-            Console.WriteLine(new BigDouble(299).CompareTo(300));
-            Console.WriteLine(new BigDouble(299).CompareTo(new BigDouble(299)));
-            Console.WriteLine(new BigDouble(299).CompareTo("298"));
-            Console.WriteLine(new BigDouble(0).CompareTo(0.0));
-            Console.WriteLine("...");
-            Console.WriteLine(
-                new BigDouble(300).EqTolerance(new BigDouble(300)));
-            Console.WriteLine(
-                new BigDouble(300).EqTolerance(new BigDouble(300.0000005)));
-            Console.WriteLine(
-                new BigDouble(300).EqTolerance(new BigDouble(300.00000002)));
-            Console.WriteLine(
-                new BigDouble(300).EqTolerance(new BigDouble(300.0000005),
-                    1e-8));
+        public static BigDouble TestValueExponent4 = new BigDouble("1.23456789e1234");
+        public static BigDouble TestValueExponent1 = new BigDouble("1.234567893e3");
 
-            for (var i = 0; i < 10000; ++i)
-            {
-                var a = BigDouble.RandomDecimalForTesting(100);
-                var b = BigDouble.RandomDecimalForTesting(100);
-                var aDouble = a.ToDouble();
-                var bDouble = b.ToDouble();
-                var smallNumber = BigDouble.RandomDecimalForTesting(2);
-                var smallDouble = smallNumber.ToDouble();
-                Assert(a.ToString() + "+" + b.ToString() + "=" + (a + b).ToString(),
-                    EqualEnough(a + b, aDouble + bDouble));
-                Assert(a.ToString() + "-" + b.ToString() + "=" + (a - b).ToString(),
-                    EqualEnough(a - b, aDouble - bDouble));
-                Assert(a.ToString() + "*" + b.ToString() + "=" + (a * b).ToString(),
-                    EqualEnough(a * b, aDouble * bDouble));
-                Assert(a.ToString() + "/" + b.ToString() + "=" + (a / b).ToString(),
-                    EqualEnough(a / b, aDouble / bDouble));
-                Assert(a.ToString() + " cmp " + b.ToString() + " = " + a.CompareTo(b),
-                    a.CompareTo(b) == aDouble.CompareTo(bDouble));
-                Assert(a.ToString() + " log " + smallNumber.ToString() + " = " + a.Log(smallDouble),
-                    EqualEnough(a.Log(smallDouble), Math.Log(aDouble, smallDouble)));
-                Assert(a.ToString() + " pow " + smallNumber.ToString() + " = " + a.Pow(smallDouble).ToString(),
-                    EqualEnough(a.Pow(smallDouble), Math.Pow(aDouble, smallDouble)));
-            }
+        [Test]
+        public void TestMantissaWithDecimalPlaces()
+        {
+            Assert.That(TestValueExponent4.MantissaWithDecimalPlaces(0), Is.EqualTo(1));
+            Assert.That(TestValueExponent4.MantissaWithDecimalPlaces(4), Is.EqualTo(1.2346));
         }
 
-        public static bool EqualEnough(BigDouble a, double b)
+        [Test]
+        public void TestToString()
         {
-            try
-            {
-                return !BigDouble.IsFinite(a.ToDouble()) &&
-                       !BigDouble.IsFinite(b) || a.EqTolerance(b) || Math.Abs(a.Exponent) > 300;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(a.ToString() + ", " + b.ToString(CultureInfo.InvariantCulture) + ", " + e);
-                return false;
-            }
+            Assert.That(TestValueExponent4.ToString(), Is.EqualTo("1.23456789e+1234"));
         }
 
-        public static void Assert(string message, bool result)
+        [Test]
+        public void TestToExponential()
         {
-            if (!result)
+            Assert.That(TestValueExponent4.ToExponential(0), Is.EqualTo("1e+1234"));
+            Assert.That(TestValueExponent4.ToExponential(4), Is.EqualTo("1.2346e+1234"));
+            Assert.That(TestValueExponent1.ToExponential(0), Is.EqualTo("1e+3"));
+            Assert.That(TestValueExponent1.ToExponential(4), Is.EqualTo("1.2346e+3"));
+        }
+
+        [Test]
+        public void TestToFixed()
+        {
+            var aLotOfZeroes = new StringBuilder(1226)
+                .Insert(0, "0", 1226)
+                .ToString();
+            Assert.That(TestValueExponent4.ToFixed(0), Is.EqualTo("123456789" + aLotOfZeroes));
+            Assert.That(TestValueExponent4.ToFixed(4), Is.EqualTo("123456789" + aLotOfZeroes + ".0000"));
+            Assert.That(TestValueExponent1.ToFixed(0), Is.EqualTo("1235"));
+            Assert.That(TestValueExponent1.ToFixed(4), Is.EqualTo("1234.5679"));
+        }
+
+        [Test]
+        public void TestToPrecision()
+        {
+            Assert.That(TestValueExponent4.ToPrecision(0), Is.EqualTo("0e+1234"));
+            Assert.That(TestValueExponent4.ToPrecision(4), Is.EqualTo("1.235e+1234"));
+            Assert.That(TestValueExponent1.ToPrecision(0), Is.EqualTo("0e+3"));
+            Assert.That(TestValueExponent1.ToPrecision(4), Is.EqualTo("1235"));
+        }
+
+        [Test]
+        public void TestAdd()
+        {
+            var addSelf = TestValueExponent4.Add(TestValueExponent4);
+            Assert.That(addSelf.Mantissa, Is.EqualTo(TestValueExponent4.Mantissa * 2));
+            Assert.That(addSelf.Exponent, Is.EqualTo(TestValueExponent4.Exponent));
+            var oneExponentLess = new BigDouble("1.23456789e1233");
+            var addOneExponentLess = TestValueExponent4.Add(oneExponentLess);
+            var expectedMantissa = TestValueExponent4.Mantissa + oneExponentLess.Mantissa / 10;
+            Assert.That(addOneExponentLess.Mantissa, Is.EqualTo(expectedMantissa));
+            Assert.That(addOneExponentLess.Exponent, Is.EqualTo(TestValueExponent4.Exponent));
+            var aLotSmaller = new BigDouble("1.23456789e123");
+            var addALotSmaller = TestValueExponent4.Add(aLotSmaller);
+            Assert.That(addALotSmaller.Mantissa, Is.EqualTo(TestValueExponent4.Mantissa));
+            Assert.That(addALotSmaller.Exponent, Is.EqualTo(TestValueExponent4.Exponent));
+            var negative = new BigDouble("-1.23456789e1234");
+            var addNegative = TestValueExponent4.Add(negative);
+            Assert.That(addNegative.Mantissa, Is.EqualTo(0));
+            Assert.That(addNegative.Exponent, Is.EqualTo(0));
+            var addSmallNumbers = new BigDouble(299).Add(new BigDouble(18));
+            Assert.That(addSmallNumbers.Mantissa, Is.EqualTo(3.17));
+            Assert.That(addSmallNumbers.Exponent, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void TestCompareTo()
+        {
+            Assert.That(new BigDouble(299).CompareTo(300), Is.EqualTo(-1));
+            Assert.That(new BigDouble(299).CompareTo(new BigDouble(299)), Is.EqualTo(0));
+            Assert.That(new BigDouble(299).CompareTo("298"), Is.EqualTo(1));
+            Assert.That(new BigDouble(0).CompareTo(0.0), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void TestEqTolerance()
+        {
+            Assert.That(new BigDouble(300).EqTolerance(new BigDouble(300)), Is.True);
+            Assert.That(new BigDouble(300).EqTolerance(new BigDouble(300.0000005)), Is.False);
+            Assert.That(new BigDouble(300).EqTolerance(new BigDouble(300.00000002)), Is.True);
+            Assert.That(new BigDouble(300).EqTolerance(new BigDouble(300.0000005), 1e-8), Is.True);
+        }
+
+        [Test]
+        [Repeat(10000)]
+        public void TestDoubleCompatibility()
+        {
+            var first = BigDouble.RandomDecimalForTesting(100);
+            var second = BigDouble.RandomDecimalForTesting(100);
+            var aDouble = first.ToDouble();
+            var bDouble = second.ToDouble();
+            AssertEqual(first + second, aDouble + bDouble);
+            AssertEqual(first - second, aDouble - bDouble);
+            AssertEqual(first * second, aDouble * bDouble);
+            AssertEqual(first / second, aDouble / bDouble);
+            Assert.That(first.CompareTo(second), Is.EqualTo(aDouble.CompareTo(bDouble)));
+            var smallNumber = BigDouble.RandomDecimalForTesting(2).Abs();
+            var smallDouble = Math.Abs(smallNumber.ToDouble());
+            AssertEqual(first.Log(smallDouble), Math.Log(aDouble, smallDouble));
+            AssertEqual(first.Pow(smallDouble), Math.Pow(aDouble, smallDouble));
+        }
+
+        private static void AssertEqual(BigDouble a, double b)
+        {
+            if (BigDouble.IsFinite(a.ToDouble()) == !BigDouble.IsFinite(b))
             {
-                Console.WriteLine(message);
+                Assert.Fail($"One of the values is finite, other is not: BigDouble {a.ToDouble()}, double {b}");
             }
+
+            if (!BigDouble.IsFinite(b)) return;
+            Assert.That(a.EqTolerance(b), Is.True);
         }
     }
 }
