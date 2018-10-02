@@ -501,42 +501,47 @@ namespace BreakInfinity
             return Divide(left, right);
         }
 
-        public static BigDouble FromValue(object value)
-        {
-            switch (value)
-            {
-                case BigDouble bigDoubleValue:
-                    return bigDoubleValue;
-                case double doubleValue:
-                    return new BigDouble(doubleValue);
-                case string stringValue:
-                    // Really?
-                    return Parse(stringValue);
-                case int intValue:
-                    return new BigDouble(intValue);
-                case long longvalue:
-                    return new BigDouble(longvalue);
-                case float floatValue:
-                    return new BigDouble(floatValue);
-            }
-
-            throw new Exception("I have no idea what to do with this: " + value.GetType());
-        }
-
         public int CompareTo(object other)
         {
-            return CompareTo(FromValue(other));
+            if (other == null)
+            {
+                return 1;
+            }
+
+            if (!(other is BigDouble bigDouble))
+            {
+                throw new ArgumentException("he parameter must be a BigDouble.");
+            }
+            return CompareTo(bigDouble);
         }
 
         public int CompareTo(BigDouble other)
         {
-            var mantissaComparison = Mantissa.CompareTo(other.Mantissa);
-            return mantissaComparison != 0 ? mantissaComparison : Exponent.CompareTo(other.Exponent);
+            if (IsZero(Mantissa) || IsZero(other.Mantissa))
+            {
+                return Mantissa.CompareTo(other.Mantissa);
+            }
+            if (Mantissa > 0 && other.Mantissa < 0)
+            {
+                return 1;
+            }
+            if (Mantissa < 0 && other.Mantissa > 0)
+            {
+                return -1;
+            }
+
+            var exponentComparison = Exponent.CompareTo(other.Exponent);
+            var result = exponentComparison != 0 ? exponentComparison : Mantissa.CompareTo(other.Mantissa);
+            return Mantissa > 0 ? result : -result;
         }
 
         public override bool Equals(object other)
         {
-            return Equals(FromValue(other));
+            if (!(other is BigDouble bigDouble))
+            {
+                return false;
+            }
+            return Equals(bigDouble);
         }
 
         public override int GetHashCode()

@@ -82,7 +82,7 @@ namespace BreakInfinity.Tests
         {
             Assert.That(new BigDouble(299).CompareTo(300), Is.EqualTo(-1));
             Assert.That(new BigDouble(299).CompareTo(new BigDouble(299)), Is.EqualTo(0));
-            Assert.That(new BigDouble(299).CompareTo("298"), Is.EqualTo(1));
+            Assert.That(new BigDouble(299).CompareTo(BigDouble.Parse("298")), Is.EqualTo(1));
             Assert.That(new BigDouble(0).CompareTo(0.0), Is.EqualTo(0));
         }
 
@@ -107,7 +107,9 @@ namespace BreakInfinity.Tests
             AssertEqual(first - second, aDouble - bDouble);
             AssertEqual(first * second, aDouble * bDouble);
             AssertEqual(first / second, aDouble / bDouble);
-            Assert.That(first.CompareTo(second), Is.EqualTo(aDouble.CompareTo(bDouble)));
+            var compareTo = first.CompareTo(second);
+            var expected = aDouble.CompareTo(bDouble);
+            Assert.That(compareTo, Is.EqualTo(expected));
             var smallNumber = BigDouble.Abs(BigDouble.RandomDecimalForTesting(2));
             var smallDouble = Math.Abs(smallNumber.ToDouble());
             AssertEqual(BigDouble.Log(first, smallDouble), Math.Log(aDouble, smallDouble));
