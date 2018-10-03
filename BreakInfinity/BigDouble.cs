@@ -437,11 +437,12 @@ namespace BreakInfinity
         }
 
         /// <summary>
-        ///
+        /// Relative comparison with tolerance being adjusted with greatest exponent.
+        /// <para>
+        /// For example, if you put in 1e-9, then any number closer to the larger number
+        /// than (larger number) * 1e-9 will be considered equal.
+        /// </para>
         /// </summary>
-        /// <param name="other"></param>
-        /// <param name="tolerance"></param>
-        /// <returns></returns>
         public bool Equals(BigDouble other, double tolerance)
         {
             return Abs(this - other) <= Max(Abs(this), Abs(other)) * tolerance;
