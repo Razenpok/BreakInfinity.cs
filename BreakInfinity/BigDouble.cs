@@ -138,11 +138,6 @@ namespace BreakInfinity
 
         public double ToDouble()
         {
-            //Problem: new Decimal(116).toNumber() returns 115.99999999999999.
-            //TODO: How to fix in general case? It's clear that if toNumber() is VERY close to an integer, we want exactly the integer. But it's not clear how to specifically write that. So I'll just settle with 'exponent >= 0 and difference between rounded and not rounded < 1e-9' as a quick fix.
-
-            //var result = this.mantissa*Math.pow(10, this.exponent);
-
             if (IsNaN(this))
             {
                 return double.NaN;
@@ -291,29 +286,29 @@ namespace BreakInfinity
                 return right;
             }
 
-            BigDouble biggerDecimal, smallerDecimal;
+            BigDouble bigger, smaller;
             if (left.Exponent >= right.Exponent)
             {
-                biggerDecimal = left;
-                smallerDecimal = right;
+                bigger = left;
+                smaller = right;
             }
             else
             {
-                biggerDecimal = right;
-                smallerDecimal = left;
+                bigger = right;
+                smaller = left;
             }
 
-            if (biggerDecimal.Exponent - smallerDecimal.Exponent > MaxSignificantDigits)
+            if (bigger.Exponent - smaller.Exponent > MaxSignificantDigits)
             {
-                return biggerDecimal;
+                return bigger;
             }
 
             //have to do this because adding numbers that were once integers but scaled down is imprecise.
             //Example: 299 + 18
             return new BigDouble(
-                Math.Round(1e14 * biggerDecimal.Mantissa + 1e14 * smallerDecimal.Mantissa *
-                           PowersOf10.Lookup(smallerDecimal.Exponent - biggerDecimal.Exponent)),
-                biggerDecimal.Exponent - 14);
+                Math.Round(1e14 * bigger.Mantissa + 1e14 * smaller.Mantissa *
+                           PowersOf10.Lookup(smaller.Exponent - bigger.Exponent)),
+                bigger.Exponent - 14);
         }
 
         public static BigDouble Subtract(BigDouble left, BigDouble right)
@@ -511,7 +506,7 @@ namespace BreakInfinity
                 return double.NaN;
             }
 
-            //UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater). We assume this to be true and thus only need to return a number, not a Decimal, and don't do any other kind of error checking.
+            //UN-SAFETY: Most incremental game cases are log(number := 1 or greater, base := 2 or greater). We assume this to be true and thus only need to return a number, not a BigDouble, and don't do any other kind of error checking.
             return 2.30258509299404568402 / Math.Log(@base) * Log10(value);
         }
 
