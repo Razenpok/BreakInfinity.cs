@@ -5,6 +5,8 @@ namespace BreakInfinity
 {
     public struct BigDouble : IFormattable, IComparable, IComparable<BigDouble>, IEquatable<BigDouble>
     {
+        public const double Tolerance = 1e-18;
+
         //for example: if two exponents are more than 17 apart, consider adding them together pointless, just return the larger one
         private const int MaxSignificantDigits = 17;
 
@@ -271,7 +273,7 @@ namespace BreakInfinity
                 return right;
             }
 
-            if (IsZero(left.Mantissa))
+            if (IsZero(right.Mantissa))
             {
                 return left;
             }
@@ -407,8 +409,9 @@ namespace BreakInfinity
             }
 
             var exponentComparison = Exponent.CompareTo(other.Exponent);
-            var result = exponentComparison != 0 ? exponentComparison : Mantissa.CompareTo(other.Mantissa);
-            return Mantissa > 0 ? result : -result;
+            return exponentComparison != 0
+                ? (Mantissa > 0 ? exponentComparison : -exponentComparison)
+                : Mantissa.CompareTo(other.Mantissa);
         }
 
         public override bool Equals(object other)
@@ -431,6 +434,17 @@ namespace BreakInfinity
         public bool Equals(BigDouble other)
         {
             return Exponent == other.Exponent && AreEqual(Mantissa, other.Mantissa);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="other"></param>
+        /// <param name="tolerance"></param>
+        /// <returns></returns>
+        public bool Equals(BigDouble other, double tolerance)
+        {
+            return Abs(this - other) <= Max(Abs(this), Abs(other)) * tolerance;
         }
 
         public static bool operator ==(BigDouble left, BigDouble right)
@@ -548,7 +562,12 @@ namespace BreakInfinity
         public static BigDouble Pow(BigDouble value, double power)
         {
             // TODO: power can be greater that long.MaxValue, which can bring troubles in fast track
-            return value == 10 && IsInteger(power) ? Pow10(power) : PowInternal(value, power);
+            var powerIsInteger = IsInteger(power);
+            if (value < 0 && !powerIsInteger)
+            {
+                return NaN;
+            }
+            return value == 10 && powerIsInteger ? Pow10(power) : PowInternal(value, power);
         }
 
         private static BigDouble PowInternal(BigDouble value, double other)
@@ -683,8 +702,7 @@ namespace BreakInfinity
 
         private static bool AreEqual(double first, double second)
         {
-            // TODO: Establish right tolerance
-            return Math.Abs(first - second) < 1e-16;
+            return Math.Abs(first - second) < Tolerance;
         }
 
         private static bool IsInteger(double value)

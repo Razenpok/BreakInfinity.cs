@@ -82,24 +82,37 @@ namespace BreakInfinity.Tests
             AssertEqual(first - second, aDouble - bDouble);
             AssertEqual(first * second, aDouble * bDouble);
             AssertEqual(first / second, aDouble / bDouble);
-            var compareTo = first.CompareTo(second);
-            var expected = aDouble.CompareTo(bDouble);
-            Assert.That(compareTo, Is.EqualTo(expected));
+            Assert.That(first.CompareTo(second), Is.EqualTo(aDouble.CompareTo(bDouble)));
             var smallNumber = BigDouble.Abs(BigMath.RandomBigDouble(2));
             var smallDouble = Math.Abs(smallNumber.ToDouble());
             AssertEqual(BigDouble.Log(first, smallDouble), Math.Log(aDouble, smallDouble));
             AssertEqual(BigDouble.Pow(first, smallDouble), Math.Pow(aDouble, smallDouble));
         }
 
-        private static void AssertEqual(BigDouble a, double b)
+        private static void AssertEqual(BigDouble actual, double expected)
         {
-            if (BigDouble.IsFinite(a.ToDouble()) == !BigDouble.IsFinite(b))
+            if (BigDouble.IsFinite(actual.ToDouble()) == !BigDouble.IsFinite(expected))
             {
-                Assert.Fail($"One of the values is finite, other is not: BigDouble {a.ToDouble()}, double {b}");
+                Assert.Fail($"One of the values is finite, other is not: BigDouble {actual.ToDouble()}, double {expected}");
             }
 
-            if (!BigDouble.IsFinite(b)) return;
-            Assert.That(a.Equals(b), Is.True);
+            if (!BigDouble.IsFinite(expected))
+            {
+                return;
+            }
+
+            if (actual.Exponent < -324 && Math.Abs(expected) < double.Epsilon)
+            {
+                return;
+            }
+
+            // TODO: Inconsistency after e-300
+            if (actual.Exponent < -300 && (Math.Log10(expected) < -300 || double.IsNaN(Math.Log10(expected))))
+            {
+                return;
+            }
+
+            Assert.That(actual.Equals(expected, 1E-9));
         }
     }
 }
