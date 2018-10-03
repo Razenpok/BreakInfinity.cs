@@ -681,48 +681,6 @@ namespace BreakInfinity
             return Ln((value + 1) / (One - value)) / 2;
         }
 
-        private static readonly Random Random = new Random();
-
-        public static BigDouble RandomDecimalForTesting(double absMaxExponent)
-        {
-            var random = Random;
-
-            //NOTE: This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
-            //5% of the time, have a mantissa of 0
-            if (random.NextDouble() * 20 < 1)
-            {
-                return new BigDouble(0, 0);
-            }
-
-            var mantissa = random.NextDouble() * 10;
-            //10% of the time, have a simple mantissa
-            if (random.NextDouble() * 10 < 1)
-            {
-                mantissa = Math.Round(mantissa);
-            }
-
-            mantissa *= Math.Sign(random.NextDouble() * 2 - 1);
-            var exponent = (long) (Math.Floor(random.NextDouble() * absMaxExponent * 2) - absMaxExponent);
-            return new BigDouble(mantissa, exponent);
-
-            /*
-                Examples:
-                randomly test pow:
-
-                var a = Decimal.randomDecimalForTesting(1000);
-                var pow = Math.random()*20-10;
-                if (Math.random()*2 < 1) { pow = Math.round(pow); }
-                var result = Decimal.pow(a, pow);
-                ["(" + a.toString() + ")^" + pow.toString(), result.toString()]
-                randomly test add:
-                var a = Decimal.randomDecimalForTesting(1000);
-                var right = Decimal.randomDecimalForTesting(17);
-                var c = a.mul(right);
-                var result = a.add(c);
-                [a.toString() + "+" + c.toString(), result.toString()]
-            */
-        }
-
         private static bool IsZero(double value)
         {
             return Math.Abs(value) < double.Epsilon;
@@ -910,6 +868,31 @@ namespace BreakInfinity
 
     public static class BigMath
     {
+        private static readonly Random Random = new Random();
+
+        /// <summary>
+        /// This doesn't follow any kind of sane random distribution, so use this for testing purposes only.
+        /// <para>5% of the time, mantissa is 0.</para>
+        /// <para>10% of the time, mantissa is round.</para>
+        /// </summary>
+        public static BigDouble RandomBigDouble(double absMaxExponent)
+        {
+            if (Random.NextDouble() * 20 < 1)
+            {
+                return new BigDouble(0, 0);
+            }
+
+            var mantissa = Random.NextDouble() * 10;
+            if (Random.NextDouble() * 10 < 1)
+            {
+                mantissa = Math.Round(mantissa);
+            }
+
+            mantissa *= Math.Sign(Random.NextDouble() * 2 - 1);
+            var exponent = (long)(Math.Floor(Random.NextDouble() * absMaxExponent * 2) - absMaxExponent);
+            return new BigDouble(mantissa, exponent);
+        }
+
         /// <summary>
         /// If you're willing to spend 'resourcesAvailable' and want to buy something with
         /// exponentially increasing cost each purchase (start at priceStart, multiply by priceRatio,

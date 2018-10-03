@@ -12,8 +12,8 @@ namespace BreakInfinity.Benchmarks
 
         public DoublevsBigDouble()
         {
-            first = BigDouble.RandomDecimalForTesting(100);
-            second = BigDouble.RandomDecimalForTesting(100);
+            first = BigMath.RandomBigDouble(100);
+            second = BigMath.RandomBigDouble(100);
             firstDouble = first.ToDouble();
             secondDouble = second.ToDouble();
         }

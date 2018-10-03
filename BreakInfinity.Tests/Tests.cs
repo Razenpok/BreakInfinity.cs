@@ -71,20 +71,11 @@ namespace BreakInfinity.Tests
         }
 
         [Test]
-        public void TestEqTolerance()
-        {
-            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300)), Is.True);
-            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.0000005)), Is.False);
-            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.00000002)), Is.True);
-            Assert.That(BigDouble.EqTolerance(new BigDouble(300), new BigDouble(300.0000005), 1e-8), Is.True);
-        }
-
-        [Test]
         [Repeat(10000)]
         public void TestDoubleCompatibility()
         {
-            var first = BigDouble.RandomDecimalForTesting(100);
-            var second = BigDouble.RandomDecimalForTesting(100);
+            var first = BigMath.RandomBigDouble(100);
+            var second = BigMath.RandomBigDouble(100);
             var aDouble = first.ToDouble();
             var bDouble = second.ToDouble();
             AssertEqual(first + second, aDouble + bDouble);
@@ -94,7 +85,7 @@ namespace BreakInfinity.Tests
             var compareTo = first.CompareTo(second);
             var expected = aDouble.CompareTo(bDouble);
             Assert.That(compareTo, Is.EqualTo(expected));
-            var smallNumber = BigDouble.Abs(BigDouble.RandomDecimalForTesting(2));
+            var smallNumber = BigDouble.Abs(BigMath.RandomBigDouble(2));
             var smallDouble = Math.Abs(smallNumber.ToDouble());
             AssertEqual(BigDouble.Log(first, smallDouble), Math.Log(aDouble, smallDouble));
             AssertEqual(BigDouble.Pow(first, smallDouble), Math.Pow(aDouble, smallDouble));
@@ -108,7 +99,7 @@ namespace BreakInfinity.Tests
             }
 
             if (!BigDouble.IsFinite(b)) return;
-            Assert.That(BigDouble.EqTolerance(a, b), Is.True);
+            Assert.That(a.Equals(b), Is.True);
         }
     }
 }
