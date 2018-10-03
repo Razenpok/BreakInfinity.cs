@@ -245,3 +245,5 @@ ModelManifest.xml
 .fake/
 
 *.Designer.cs
+
+BenchmarkDotNet.Artifacts/

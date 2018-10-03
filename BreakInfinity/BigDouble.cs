@@ -494,44 +494,6 @@ namespace BreakInfinity
             return left <= right ? left : right;
         }
 
-        //tolerance is a relative tolerance, multiplied by the greater of the magnitudes of the two arguments. For example, if you put in 1e-9, then any number closer to the larger number than (larger number)*1e-9 will be considered equal.
-        // TODO: Maybe standard C# pattern of double comparison will suffice for BigDouble
-        public static bool EqTolerance(BigDouble a, BigDouble b, double tolerance = 1e-9)
-        {
-            // https://stackoverflow.com/a/33024979
-            return Abs(a - b) <= Max(Abs(a), Abs(b)) * tolerance;
-        }
-
-        public static int CmpTolerance(BigDouble a, BigDouble b, double tolerance = 1e-9)
-        {
-            return EqTolerance(a, b, tolerance) ? 0 : a.CompareTo(b);
-        }
-
-        public static bool NeqTolerance(BigDouble a, BigDouble b, double tolerance = 1e-9)
-        {
-            return !EqTolerance(a, b, tolerance);
-        }
-
-        public static bool LtTolerance(BigDouble a, BigDouble b, double tolerance = 1e-9)
-        {
-            return !EqTolerance(a, b, tolerance) && a < b;
-        }
-
-        public static bool LteTolerance(BigDouble a, BigDouble b, double tolerance = 1e-9)
-        {
-            return EqTolerance(a, b, tolerance) || a < b;
-        }
-
-        public static bool GtTolerance(BigDouble a, BigDouble b, double tolerance = 1e-9)
-        {
-            return !EqTolerance(a, b, tolerance) && a > b;
-        }
-
-        public static bool GteTolerance(BigDouble a, BigDouble b, double tolerance = 1e-9)
-        {
-            return EqTolerance(a, b, tolerance) || a > b;
-        }
-
         public static double AbsLog10(BigDouble value)
         {
             return value.Exponent + Math.Log10(Math.Abs(value.Mantissa));
