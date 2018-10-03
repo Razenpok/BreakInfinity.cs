@@ -388,7 +388,7 @@ namespace BreakInfinity
 
             if (!(other is BigDouble bigDouble))
             {
-                throw new ArgumentException("he parameter must be a BigDouble.");
+                throw new ArgumentException("The parameter must be a BigDouble.");
             }
             return CompareTo(bigDouble);
         }
