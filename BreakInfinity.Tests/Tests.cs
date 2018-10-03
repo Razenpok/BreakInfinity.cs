@@ -11,13 +11,6 @@ namespace BreakInfinity.Tests
         public static BigDouble TestValueExponent1 = BigDouble.Parse("1.234567893e3");
 
         [Test]
-        public void TestMantissaWithDecimalPlaces()
-        {
-            Assert.That(TestValueExponent4.MantissaWithDecimalPlaces(0), Is.EqualTo(1));
-            Assert.That(TestValueExponent4.MantissaWithDecimalPlaces(4), Is.EqualTo(1.2346));
-        }
-
-        [Test]
         public void TestToString()
         {
             Assert.That(TestValueExponent4.ToString(), Is.EqualTo("1.23456789e+1234"));
@@ -26,10 +19,10 @@ namespace BreakInfinity.Tests
         [Test]
         public void TestToExponential()
         {
-            Assert.That(TestValueExponent4.ToExponential(0), Is.EqualTo("1e+1234"));
-            Assert.That(TestValueExponent4.ToExponential(4), Is.EqualTo("1.2346e+1234"));
-            Assert.That(TestValueExponent1.ToExponential(0), Is.EqualTo("1e+3"));
-            Assert.That(TestValueExponent1.ToExponential(4), Is.EqualTo("1.2346e+3"));
+            Assert.That(TestValueExponent4.ToString("E0"), Is.EqualTo("1e+1234"));
+            Assert.That(TestValueExponent4.ToString("E4"), Is.EqualTo("1.2346e+1234"));
+            Assert.That(TestValueExponent1.ToString("E0"), Is.EqualTo("1e+3"));
+            Assert.That(TestValueExponent1.ToString("E4"), Is.EqualTo("1.2346e+3"));
         }
 
         [Test]
@@ -38,19 +31,10 @@ namespace BreakInfinity.Tests
             var aLotOfZeroes = new StringBuilder(1226)
                 .Insert(0, "0", 1226)
                 .ToString();
-            Assert.That(TestValueExponent4.ToFixed(0), Is.EqualTo("123456789" + aLotOfZeroes));
-            Assert.That(TestValueExponent4.ToFixed(4), Is.EqualTo("123456789" + aLotOfZeroes + ".0000"));
-            Assert.That(TestValueExponent1.ToFixed(0), Is.EqualTo("1235"));
-            Assert.That(TestValueExponent1.ToFixed(4), Is.EqualTo("1234.5679"));
-        }
-
-        [Test]
-        public void TestToPrecision()
-        {
-            Assert.That(TestValueExponent4.ToPrecision(0), Is.EqualTo("0e+1234"));
-            Assert.That(TestValueExponent4.ToPrecision(4), Is.EqualTo("1.235e+1234"));
-            Assert.That(TestValueExponent1.ToPrecision(0), Is.EqualTo("0e+3"));
-            Assert.That(TestValueExponent1.ToPrecision(4), Is.EqualTo("1235"));
+            Assert.That(TestValueExponent4.ToString("F0"), Is.EqualTo("123456789" + aLotOfZeroes));
+            Assert.That(TestValueExponent4.ToString("F4"), Is.EqualTo("123456789" + aLotOfZeroes + ".0000"));
+            Assert.That(TestValueExponent1.ToString("F0"), Is.EqualTo("1235"));
+            Assert.That(TestValueExponent1.ToString("F4"), Is.EqualTo("1234.5679"));
         }
 
         [Test]

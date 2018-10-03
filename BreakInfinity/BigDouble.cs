@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace BreakInfinity
 {
-    public struct BigDouble : IComparable, IComparable<BigDouble>, IEquatable<BigDouble>
+    public struct BigDouble : IFormattable, IComparable, IComparable<BigDouble>, IEquatable<BigDouble>
     {
         //for example: if two exponents are more than 17 apart, consider adding them together pointless, just return the larger one
         private const int MaxSignificantDigits = 17;
@@ -175,136 +175,19 @@ namespace BreakInfinity
             return result;
         }
 
-        public double MantissaWithDecimalPlaces(int places)
-        {
-            // https://stackoverflow.com/a/37425022
-
-            if (IsNaN(this)) return double.NaN;
-            if (IsZero(Mantissa)) return 0;
-
-            var len = places + 1;
-            var numDigits = (int) Math.Ceiling(Math.Log10(Math.Abs(Mantissa)));
-            var rounded = Math.Round(Mantissa * Math.Pow(10, len - numDigits)) * Math.Pow(10, numDigits - len);
-            return double.Parse(ToFixed(rounded, Math.Max(len - numDigits, 0)), CultureInfo.InvariantCulture);
-        }
-
         public override string ToString()
         {
-            if (IsNaN(this)) return "NaN";
-            if (Exponent >= ExpLimit)
-            {
-                return Mantissa > 0 ? "Infinity" : "-Infinity";
-            }
-
-            if (Exponent <= -ExpLimit || IsZero(Mantissa))
-            {
-                return "0";
-            }
-
-            if (Exponent < 21 && Exponent > -7)
-            {
-                return ToDouble().ToString(CultureInfo.InvariantCulture);
-            }
-
-            return Mantissa.ToString(CultureInfo.InvariantCulture) + "e" + (Exponent >= 0 ? "+" : "") +
-                   Exponent.ToString(CultureInfo.InvariantCulture);
+            return BigNumber.FormatBigDouble(this, null, null);
         }
 
-        public static string ToFixed(double value, int places)
+        public string ToString(string format)
         {
-            return value.ToString("F" + places, CultureInfo.InvariantCulture);
+            return BigNumber.FormatBigDouble(this, format, null);
         }
 
-        public string ToExponential(int places = MaxSignificantDigits)
+        public string ToString(string format, IFormatProvider formatProvider)
         {
-            // https://stackoverflow.com/a/37425022
-
-            //TODO: Some unfixed cases:
-            //new Decimal("1.2345e-999").toExponential()
-            //"1.23450000000000015e-999"
-            //new Decimal("1e-999").toExponential()
-            //"1.000000000000000000e-999"
-            //TBH I'm tempted to just say it's a feature. If you're doing pretty formatting then why don't you know how many decimal places you want...?
-
-            if (IsNaN(this)) return "NaN";
-            if (Exponent >= ExpLimit)
-            {
-                return Mantissa > 0 ? "Infinity" : "-Infinity";
-            }
-
-            if (Exponent <= -ExpLimit || IsZero(Mantissa))
-            {
-                return "0" + (places > 0 ? PadEnd(".", places + 1, '0') : "") + "e+0";
-            }
-
-            var len = places + 1;
-            var numDigits = (int) Math.Ceiling(Math.Log10(Math.Abs(Mantissa)));
-            var rounded = Math.Round(Mantissa * Math.Pow(10, len - numDigits)) * Math.Pow(10, numDigits - len);
-
-            return ToFixed(rounded, Math.Max(len - numDigits, 0)) + "e" + (Exponent >= 0 ? "+" : "") + Exponent;
-        }
-
-        public string ToFixed(int places = MaxSignificantDigits)
-        {
-            if (IsNaN(this)) return "NaN";
-            if (Exponent >= ExpLimit)
-            {
-                return Mantissa > 0 ? "Infinity" : "-Infinity";
-            }
-
-            if (Exponent <= -ExpLimit || IsZero(Mantissa))
-            {
-                return "0" + (places > 0 ? PadEnd(".", places + 1, '0') : "");
-            }
-
-            // two cases:
-            // 1) exponent is 17 or greater: just print out mantissa with the appropriate number of zeroes after it
-            // 2) exponent is 16 or less: use basic toFixed
-
-            if (Exponent >= MaxSignificantDigits)
-            {
-                return PadEnd(Mantissa.ToString(CultureInfo.InvariantCulture).Replace(".", ""), (int) Exponent + 1,
-                           '0') + (places > 0 ? PadEnd(".", places + 1, '0') : "");
-            }
-
-            return ToFixed(ToDouble(), places);
-        }
-
-        private static string PadEnd(string str, int maxLength, char fillString)
-        {
-            if (str == null)
-            {
-                str = "";
-            }
-
-            var length = str.Length;
-            if (length >= maxLength)
-            {
-                return str;
-            }
-
-            var fillLen = maxLength - length;
-            return str + new string(fillString, fillLen);
-        }
-
-        public string ToPrecision(int places = MaxSignificantDigits)
-        {
-            if (Exponent <= -7)
-            {
-                return ToExponential(places - 1);
-            }
-
-            if (places > Exponent)
-            {
-                return ToFixed((int) (places - Exponent - 1));
-            }
-
-            return ToExponential(places - 1);
-        }
-
-        public string ToStringWithDecimalPlaces(int places = MaxSignificantDigits)
-        {
-            return ToExponential(places);
+            return BigNumber.FormatBigDouble(this, format, formatProvider);
         }
 
         public static BigDouble Abs(BigDouble value)
@@ -897,6 +780,143 @@ namespace BreakInfinity
         public static bool IsFinite(double value)
         {
             return !(double.IsNaN(value) || double.IsInfinity(value));
+        }
+
+        /// <summary>
+        /// The BigNumber class implements methods for formatting and parsing big numeric values.
+        /// </summary>
+        private static class BigNumber
+        {
+            public static string FormatBigDouble(BigDouble value, string format, IFormatProvider formatProvider)
+            {
+                if (IsNaN(value)) return "NaN";
+                if (value.Exponent >= ExpLimit)
+                {
+                    return value.Mantissa > 0 ? "Infinity" : "-Infinity";
+                }
+
+                var formatSpecifier = ParseFormatSpecifier(format, out var formatDigits);
+                switch (formatSpecifier)
+                {
+                    case 'R':
+                    case 'G':
+                        return FormatGeneral(value, formatDigits);
+                    case 'E':
+                        return FormatExponential(value, formatDigits);
+                    case 'F':
+                        return FormatFixed(value, formatDigits);
+                }
+                throw new FormatException($"Unknown string format '{formatSpecifier}'");
+            }
+
+            private static char ParseFormatSpecifier(string format, out int digits)
+            {
+                const char customFormat = (char) 0;
+                digits = -1;
+                if (string.IsNullOrEmpty(format))
+                {
+                    return 'R';
+                }
+
+                var i = 0;
+                var ch = format[i];
+                if ((ch < 'A' || ch > 'Z') && (ch < 'a' || ch > 'z'))
+                {
+                    return customFormat;
+                }
+
+                i++;
+                var n = -1;
+
+                if (i < format.Length && format[i] >= '0' && format[i] <= '9')
+                {
+                    n = format[i++] - '0';
+                    while (i < format.Length && format[i] >= '0' && format[i] <= '9')
+                    {
+                        n = n * 10 + (format[i++] - '0');
+                        if (n >= 10)
+                            break;
+                    }
+                }
+
+                if (i < format.Length && format[i] != '\0')
+                {
+                    return customFormat;
+                }
+
+                digits = n;
+                return ch;
+            }
+
+            private static string FormatGeneral(BigDouble value, int places)
+            {
+                if (value.Exponent <= -ExpLimit || IsZero(value.Mantissa))
+                {
+                    return "0";
+                }
+
+                var format = places > 0 ? $"G{places}" : "G";
+                if (value.Exponent < 21 && value.Exponent > -7)
+                {
+                    return value.ToDouble().ToString(format, CultureInfo.InvariantCulture);
+                }
+
+                return value.Mantissa.ToString(format, CultureInfo.InvariantCulture)
+                       + "e" + (value.Exponent >= 0 ? "+" : "")
+                       + value.Exponent.ToString(CultureInfo.InvariantCulture);
+            }
+
+            private static string ToFixed(double value, int places)
+            {
+                return value.ToString($"F{places}", CultureInfo.InvariantCulture);
+            }
+
+            private static string FormatExponential(BigDouble value, int places)
+            {
+                if (value.Exponent <= -ExpLimit || IsZero(value.Mantissa))
+                {
+                    return "0" + (places > 0 ? ".".PadRight(places + 1, '0') : "") + "e+0";
+                }
+
+                var len = (places >= 0 ? places : MaxSignificantDigits) + 1;
+                var numDigits = (int)Math.Ceiling(Math.Log10(Math.Abs(value.Mantissa)));
+                var rounded = Math.Round(value.Mantissa * Math.Pow(10, len - numDigits)) * Math.Pow(10, numDigits - len);
+
+                var mantissa = ToFixed(rounded, Math.Max(len - numDigits, 0));
+                if (mantissa != "0" && places < 0)
+                {
+                    mantissa = mantissa.TrimEnd('0', '.');
+                }
+                return mantissa + "e" + (value.Exponent >= 0 ? "+" : "")
+                       + value.Exponent;
+            }
+
+            private static string FormatFixed(BigDouble value, int places)
+            {
+                if (places < 0)
+                {
+                    places = MaxSignificantDigits;
+                }
+                if (value.Exponent <= -ExpLimit || IsZero(value.Mantissa))
+                {
+                    return "0" + (places > 0 ? ".".PadRight(places + 1, '0') : "");
+                }
+
+                // two cases:
+                // 1) exponent is 17 or greater: just print out mantissa with the appropriate number of zeroes after it
+                // 2) exponent is 16 or less: use basic toFixed
+
+                if (value.Exponent >= MaxSignificantDigits)
+                {
+                    // TODO: StringBuilder-optimizable
+                    return value.Mantissa
+                        .ToString(CultureInfo.InvariantCulture)
+                        .Replace(".", "")
+                        .PadRight((int)value.Exponent + 1, '0')
+                        + (places > 0 ? ".".PadRight(places + 1, '0') : "");
+                }
+                return ToFixed(value.ToDouble(), places);
+            }
         }
 
         /// <summary>
