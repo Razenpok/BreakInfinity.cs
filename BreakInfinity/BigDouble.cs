@@ -563,7 +563,7 @@ namespace BreakInfinity
 
         public static BigDouble Pow(BigDouble value, long power)
         {
-            return value == 10
+            return Is10(value)
                 ? Pow10(power)
                 // TODO: overflows
                 : new BigDouble(Math.Pow(value.Mantissa, power), value.Exponent * power);
@@ -577,7 +577,12 @@ namespace BreakInfinity
             {
                 return NaN;
             }
-            return value == 10 && powerIsInteger ? Pow10(power) : PowInternal(value, power);
+            return Is10(value) && powerIsInteger ? Pow10(power) : PowInternal(value, power);
+        }
+
+        private static bool Is10(BigDouble value)
+        {
+            return value.Exponent == 1 && value.Mantissa - 1 < double.Epsilon;
         }
 
         private static BigDouble PowInternal(BigDouble value, double other)
