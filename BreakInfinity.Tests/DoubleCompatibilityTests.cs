@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 
 namespace BreakInfinity.Tests
@@ -16,93 +17,113 @@ namespace BreakInfinity.Tests
         }
 
         [Test]
-        [TestCaseSource(nameof(FundamentalTestCases))]
-        [TestCaseSource(nameof(GeneralTestCases))]
-        public void Add(TestCase testCase)
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Add(BinaryTestCase testCase)
         {
             testCase.AssertEqual((d1, d2) => d1 + d2, (bd1, bd2) => bd1 + bd2);
         }
 
         [Test]
-        [TestCaseSource(nameof(FundamentalTestCases))]
-        [TestCaseSource(nameof(GeneralTestCases))]
-        public void Subtract(TestCase testCase)
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Subtract(BinaryTestCase testCase)
         {
             testCase.AssertEqual((d1, d2) => d1 - d2, (bd1, bd2) => bd1 - bd2);
         }
 
         [Test]
-        [TestCaseSource(nameof(FundamentalTestCases))]
-        [TestCaseSource(nameof(GeneralTestCases))]
-        public void Multiply(TestCase testCase)
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Multiply(BinaryTestCase testCase)
         {
             testCase.AssertEqual((d1, d2) => d1 * d2, (bd1, bd2) => bd1 * bd2);
         }
 
         [Test]
-        [TestCaseSource(nameof(FundamentalTestCases))]
-        [TestCaseSource(nameof(GeneralTestCases))]
-        public void Divide(TestCase testCase)
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Divide(BinaryTestCase testCase)
         {
             testCase.AssertEqual((d1, d2) => d1 / d2, (bd1, bd2) => bd1 / bd2);
         }
 
         [Test]
-        [TestCaseSource(nameof(FundamentalTestCases))]
-        [TestCaseSource(nameof(GeneralTestCases))]
-        public void CompareTo(TestCase testCase)
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Negate(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(d => -d, bd => -bd);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void CompareTo(BinaryTestCase testCase)
         {
             testCase.AssertEqual((d1, d2) => d1.CompareTo(d2), (bd1, bd2) => bd1.CompareTo(bd2));
         }
 
         [Test]
-        [TestCaseSource(nameof(FundamentalTestCases))]
-        [TestCaseSource(nameof(GeneralTestCases))]
-        public void Log(TestCase testCase)
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Log(BinaryTestCase testCase)
         {
             testCase.AssertEqual(Math.Log, (bd1, bd2) => BigDouble.Log(bd1, bd2));
         }
 
         [Test]
-        [TestCaseSource(nameof(FundamentalTestCases))]
-        [TestCaseSource(nameof(GeneralTestCases))]
-        public void Pow(TestCase testCase)
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Pow(BinaryTestCase testCase)
         {
             testCase.AssertEqual(Math.Pow, BigDouble.Pow);
         }
 
-        private static IEnumerable<TestCaseData> GeneralTestCases()
+        private static IEnumerable<TestCaseData> GeneralUnaryTestCases()
         {
-            return new TestCaseCombinator()
-                .Value("0", 0)
-                .Value("Integer", 345)
-                .Value("Negative integer", -745)
-                .Value("Big integer", 123456789)
-                .Value("Big negative integer", -987654321)
-                .Value("Small integer", 4)
-                .Value("Small negative integer", -5)
-                .Value("Big value", 3.7e63)
-                .Value("Big negative value", -7.3e36)
-                .Value("Really big value", 7.23e222)
-                .Value("Really big negative value", -2.23e201)
-                .Value("Small value", 5.323e-47)
-                .Value("Small negative value", -8.252e-21)
-                .Value("Really small value", 1.98e-241)
-                .Value("Really small negative value", -6.79e-215)
-                .GenerateTestCases();
+            return GeneralTestCaseCombinator.UnaryTestCases;
         }
 
-        private static IEnumerable<TestCaseData> FundamentalTestCases()
+        private static IEnumerable<TestCaseData> FundamentalUnaryTestCases()
         {
-            return new TestCaseCombinator()
-                .Value("0", 0)
-                .Value("1", 1)
-                .Value("-1", -1)
-                .Value("∞", double.PositiveInfinity)
-                .Value("-∞", double.NegativeInfinity)
-                .Value("NaN", double.NaN)
-                .GenerateTestCases();
+            return FundamentalTestCaseCombinator.UnaryTestCases;
         }
+
+        private static IEnumerable<TestCaseData> GeneralBinaryTestCases()
+        {
+            return GeneralTestCaseCombinator.BinaryTestCases;
+        }
+
+        private static IEnumerable<TestCaseData> FundamentalBinaryTestCases()
+        {
+            return FundamentalTestCaseCombinator.BinaryTestCases;
+        }
+
+        private static readonly TestCaseCombinator GeneralTestCaseCombinator = new TestCaseCombinator()
+            .Value("0", 0)
+            .Value("Integer", 345)
+            .Value("Negative integer", -745)
+            .Value("Big integer", 123456789)
+            .Value("Big negative integer", -987654321)
+            .Value("Small integer", 4)
+            .Value("Small negative integer", -5)
+            .Value("Big value", 3.7e63)
+            .Value("Big negative value", -7.3e36)
+            .Value("Really big value", 7.23e222)
+            .Value("Really big negative value", -2.23e201)
+            .Value("Small value", 5.323e-47)
+            .Value("Small negative value", -8.252e-21)
+            .Value("Really small value", 1.98e-241)
+            .Value("Really small negative value", -6.79e-215);
+
+        private static readonly TestCaseCombinator FundamentalTestCaseCombinator = new TestCaseCombinator()
+            .Value("0", 0)
+            .Value("1", 1)
+            .Value("-1", -1)
+            .Value("∞", double.PositiveInfinity)
+            .Value("-∞", double.NegativeInfinity)
+            .Value("NaN", double.NaN);
 
         private class TestCaseCombinator
         {
@@ -120,20 +141,32 @@ namespace BreakInfinity.Tests
                 return this;
             }
 
-            public IEnumerable<TestCaseData> GenerateTestCases()
+            public IEnumerable<TestCaseData> UnaryTestCases
             {
-                var current = 0;
-                while (current < values.Count)
+                get
                 {
-                    for (var i = current; i < values.Count; i++)
-                    {
-                        foreach (var testCaseData in Permutate(values[current], values[i]))
-                        {
-                            yield return testCaseData;
-                        }
-                    }
+                    return values
+                        .Select(v => new TestCaseData(new UnaryTestCase(v.Value, v.Precision)).SetName(v.Name));
+                }
+            }
 
-                    current++;
+            public IEnumerable<TestCaseData> BinaryTestCases
+            {
+                get
+                {
+                    var current = 0;
+                    while (current < values.Count)
+                    {
+                        for (var i = current; i < values.Count; i++)
+                        {
+                            foreach (var testCaseData in Permutate(values[current], values[i]))
+                            {
+                                yield return testCaseData;
+                            }
+                        }
+
+                        current++;
+                    }
                 }
             }
 
@@ -148,7 +181,7 @@ namespace BreakInfinity.Tests
 
             private static TestCaseData TestCaseData(TestCaseValue first, TestCaseValue second)
             {
-                var testCase = new TestCase(first.Value, second.Value, Math.Max(first.Precision, second.Precision));
+                var testCase = new BinaryTestCase(first.Value, second.Value, Math.Max(first.Precision, second.Precision));
                 return new TestCaseData(testCase).SetName($"{first.Name}, {second.Name}");
             }
 
@@ -167,13 +200,56 @@ namespace BreakInfinity.Tests
             }
         }
 
-        public class TestCase
+        public static void AssertEqual(BigDouble bigDouble, double @double, double precision)
+        {
+            if (IsOutsideDoubleRange(bigDouble))
+            {
+                Assert.Ignore("Result is not in range of possible Double values");
+            }
+            Assert.That(bigDouble.Equals(@double, precision),
+                $"Double result {@double} is not equals BigDouble result {bigDouble}");
+        }
+
+        private static bool IsOutsideDoubleRange(BigDouble bigDouble)
+        {
+            if (BigDouble.IsNaN(bigDouble) || BigDouble.IsInfinity(bigDouble))
+            {
+                return false;
+            }
+
+            return bigDouble.Exponent > Math.Log10(double.MaxValue)
+                   || bigDouble.Exponent < Math.Log10(double.Epsilon);
+        }
+
+        public class UnaryTestCase
+        {
+            private readonly double @double;
+            private readonly BigDouble bigDouble;
+            private readonly double precision;
+
+            public UnaryTestCase(double @double, double precision = BigDouble.Tolerance)
+            {
+                this.@double = @double;
+                bigDouble = @double;
+                this.precision = precision;
+            }
+
+            public void AssertEqual(Func<double, double> doubleOperation,
+                Func<BigDouble, BigDouble> bigDoubleOperation)
+            {
+                var doubleResult = doubleOperation(@double);
+                var bigDoubleResult = bigDoubleOperation(bigDouble);
+                DoubleCompatibilityTests.AssertEqual(bigDoubleResult, doubleResult, precision);
+            }
+        }
+
+        public class BinaryTestCase
         {
             private readonly (double first, double second) doubles;
             private readonly (BigDouble first, BigDouble second) bigDoubles;
             private readonly double precision;
 
-            public TestCase(double first, double second, double precision = BigDouble.Tolerance)
+            public BinaryTestCase(double first, double second, double precision = BigDouble.Tolerance)
             {
                 doubles = (first, second);
                 bigDoubles = (first, second);
@@ -185,23 +261,7 @@ namespace BreakInfinity.Tests
             {
                 var doubleResult = doubleOperation(doubles.first, doubles.second);
                 var bigDoubleResult = bigDoubleOperation(bigDoubles.first, bigDoubles.second);
-                if (IsOutsideDoubleRange(bigDoubleResult))
-                {
-                    Assert.Ignore("Result is not in range of possible Double values");
-                }
-                Assert.That(bigDoubleResult.Equals(doubleResult, precision),
-                    $"Double result {doubleResult} is not equals BigDouble result {bigDoubleResult}");
-            }
-
-            private static bool IsOutsideDoubleRange(BigDouble bigDouble)
-            {
-                if (BigDouble.IsNaN(bigDouble) || BigDouble.IsInfinity(bigDouble))
-                {
-                    return false;
-                }
-
-                return bigDouble.Exponent > Math.Log10(double.MaxValue)
-                    || bigDouble.Exponent < Math.Log10(double.Epsilon);
+                DoubleCompatibilityTests.AssertEqual(bigDoubleResult, doubleResult, precision);
             }
         }
     }
