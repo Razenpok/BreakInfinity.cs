@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using BreakInfinity.Benchmarks.Quadruple;
 
 namespace BreakInfinity.Benchmarks
 {
@@ -47,7 +48,7 @@ namespace BreakInfinity.Benchmarks
     {
         public static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<DoublevsBigDouble>();
+            var summary = BenchmarkRunner.Run<BigDoubleVsQuad>();
         }
     }
 }
