@@ -524,11 +524,19 @@ namespace BreakInfinity
 
         public static BigDouble Max(BigDouble left, BigDouble right)
         {
-            return left < right ? right : left;
+            if (IsNaN(left) || IsNaN(right))
+            {
+                return NaN;
+            }
+            return left > right ? left : right;
         }
 
         public static BigDouble Min(BigDouble left, BigDouble right)
         {
+            if (IsNaN(left) || IsNaN(right))
+            {
+                return NaN;
+            }
             return left > right ? right : left;
         }
 
