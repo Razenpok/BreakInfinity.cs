@@ -84,9 +84,25 @@ namespace BreakInfinity.Tests
         [Test]
         [TestCaseSource(nameof(FundamentalBinaryTestCases))]
         [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void GreaterThanOrEqual(BinaryTestCase testCase)
+        {
+            testCase.AssertComparison((d1, d2) => d1 >= d2, (bd1, bd2) => bd1 >= bd2);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
         public void LessThan(BinaryTestCase testCase)
         {
             testCase.AssertComparison((d1, d2) => d1 < d2, (bd1, bd2) => bd1 < bd2);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void LessThanOrEqual(BinaryTestCase testCase)
+        {
+            testCase.AssertComparison((d1, d2) => d1 <= d2, (bd1, bd2) => bd1 <= bd2);
         }
 
         [Test]
@@ -281,12 +297,6 @@ namespace BreakInfinity.Tests
             public TestCaseCombinator Value(string name, double value)
             {
                 values.Add(new TestCaseValue(name, value, BigDouble.Tolerance));
-                return this;
-            }
-
-            public TestCaseCombinator LowPrecisionValue(string name, double value)
-            {
-                values.Add(new TestCaseValue(name, value, 1E-9));
                 return this;
             }
 

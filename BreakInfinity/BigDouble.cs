@@ -478,8 +478,12 @@ namespace BreakInfinity
 
         public static bool operator <(BigDouble a, BigDouble b)
         {
+            if (IsNaN(a) || IsNaN(b))
+            {
+                return false;
+            }
             if (IsZero(a.Mantissa)) return b.Mantissa > 0;
-            if (IsZero(b.Mantissa)) return a.Mantissa <= 0;
+            if (IsZero(b.Mantissa)) return a.Mantissa < 0;
             if (a.Exponent == b.Exponent) return a.Mantissa < b.Mantissa;
             if (a.Mantissa > 0) return b.Mantissa > 0 && a.Exponent < b.Exponent;
             return b.Mantissa > 0 || a.Exponent > b.Exponent;
@@ -487,15 +491,20 @@ namespace BreakInfinity
 
         public static bool operator <=(BigDouble a, BigDouble b)
         {
-            if (IsZero(a.Mantissa)) return b.Mantissa >= 0;
-            if (IsZero(b.Mantissa)) return a.Mantissa <= 0;
-            if (a.Exponent == b.Exponent) return a.Mantissa <= b.Mantissa;
-            if (a.Mantissa > 0) return b.Mantissa > 0 && a.Exponent < b.Exponent;
-            return b.Mantissa > 0 || a.Exponent > b.Exponent;
+            if (IsNaN(a) || IsNaN(b))
+            {
+                return false;
+            }
+
+            return !(a > b);
         }
 
         public static bool operator >(BigDouble a, BigDouble b)
         {
+            if (IsNaN(a) || IsNaN(b))
+            {
+                return false;
+            }
             if (IsZero(a.Mantissa)) return b.Mantissa < 0;
             if (IsZero(b.Mantissa)) return a.Mantissa > 0;
             if (a.Exponent == b.Exponent) return a.Mantissa > b.Mantissa;
@@ -505,21 +514,22 @@ namespace BreakInfinity
 
         public static bool operator >=(BigDouble a, BigDouble b)
         {
-            if (IsZero(a.Mantissa)) return b.Mantissa <= 0;
-            if (IsZero(b.Mantissa)) return a.Mantissa > 0;
-            if (a.Exponent == b.Exponent) return a.Mantissa >= b.Mantissa;
-            if (a.Mantissa > 0) return b.Mantissa < 0 || a.Exponent > b.Exponent;
-            return b.Mantissa < 0 && a.Exponent < b.Exponent;
+            if (IsNaN(a) || IsNaN(b))
+            {
+                return false;
+            }
+
+            return !(a < b);
         }
 
         public static BigDouble Max(BigDouble left, BigDouble right)
         {
-            return left >= right ? left : right;
+            return left < right ? right : left;
         }
 
         public static BigDouble Min(BigDouble left, BigDouble right)
         {
-            return left <= right ? left : right;
+            return left > right ? right : left;
         }
 
         public static double AbsLog10(BigDouble value)
