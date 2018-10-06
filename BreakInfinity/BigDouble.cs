@@ -76,7 +76,7 @@ namespace BreakInfinity
                     mantissa = value / PowersOf10.Lookup(exponent);
                 }
 
-                this = new BigDouble(mantissa, exponent);
+                this = new BigDouble(mantissa, exponent, false);
             }
         }
 
@@ -126,7 +126,7 @@ namespace BreakInfinity
 
             if (value == "NaN")
             {
-                return new BigDouble(double.NaN, long.MinValue, false);
+                return NaN;
             }
 
             var result = new BigDouble(double.Parse(value, CultureInfo.InvariantCulture));
@@ -189,12 +189,12 @@ namespace BreakInfinity
 
         public static BigDouble Abs(BigDouble value)
         {
-            return new BigDouble(Math.Abs(value.Mantissa), value.Exponent);
+            return new BigDouble(Math.Abs(value.Mantissa), value.Exponent, false);
         }
 
         public static BigDouble Negate(BigDouble value)
         {
-            return new BigDouble(-value.Mantissa, value.Exponent);
+            return new BigDouble(-value.Mantissa, value.Exponent, false);
         }
 
         public static int Sign(BigDouble value)
@@ -565,7 +565,7 @@ namespace BreakInfinity
 
         public static BigDouble Pow10(long power)
         {
-            return new BigDouble(1, power);
+            return new BigDouble(1, power, false);
         }
 
         public static BigDouble Pow(BigDouble value, BigDouble power)
@@ -739,7 +739,7 @@ namespace BreakInfinity
 
         private static bool IsFinite(double value)
         {
-            return !(double.IsNaN(value) || double.IsInfinity(value));
+            return !double.IsNaN(value) && !double.IsInfinity(value);
         }
 
         /// <summary>
