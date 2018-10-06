@@ -32,7 +32,17 @@ namespace BreakInfinity
             else
             {
                 var tempExponent = (long)Math.Floor(Math.Log10(Math.Abs(mantissa)));
-                Mantissa = mantissa / PowersOf10.Lookup(tempExponent);
+                //SAFETY: handle 5e-324, -5e-324 separately
+                if (tempExponent == DoubleExpMin)
+                {
+                    mantissa = mantissa * 10 / 1e-323;
+                }
+                else
+                {
+                    mantissa = mantissa / PowersOf10.Lookup(tempExponent);
+                }
+
+                Mantissa = mantissa;
                 Exponent = exponent + tempExponent;
             }
         }
@@ -64,19 +74,7 @@ namespace BreakInfinity
             }
             else
             {
-                var exponent = (long) Math.Floor(Math.Log10(Math.Abs(value)));
-                double mantissa;
-                //SAFETY: handle 5e-324, -5e-324 separately
-                if (exponent == DoubleExpMin)
-                {
-                    mantissa = value * 10 / 1e-323;
-                }
-                else
-                {
-                    mantissa = value / PowersOf10.Lookup(exponent);
-                }
-
-                this = new BigDouble(mantissa, exponent, false);
+                this = new BigDouble(value, 0);
             }
         }
 
