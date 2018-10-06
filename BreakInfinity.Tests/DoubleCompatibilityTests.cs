@@ -74,12 +74,21 @@ namespace BreakInfinity.Tests
         private static IEnumerable<TestCaseData> GeneralTestCases()
         {
             return new TestCaseCombinator()
+                .Value("0", 0)
+                .Value("Integer", 345)
+                .Value("Negative integer", -745)
                 .Value("Big integer", 123456789)
-                .Value("Small integer", 4123)
-                .Value("Big value", 3.7e83)
+                .Value("Big negative integer", -987654321)
+                .Value("Small integer", 4)
+                .Value("Small negative integer", -5)
+                .Value("Big value", 3.7e63)
+                .Value("Big negative value", -7.3e36)
                 .Value("Really big value", 7.23e222)
-                .Value("Small value", 3.7e-83)
-                .Value("Really small value", 7.23e-222)
+                .Value("Really big negative value", -2.23e201)
+                .Value("Small value", 5.323e-47)
+                .Value("Small negative value", -8.252e-21)
+                .Value("Really small value", 1.98e-241)
+                .Value("Really small negative value", -6.79e-215)
                 .GenerateTestCases();
         }
 
