@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using NUnit.Framework;
 
 namespace BreakInfinity.Tests
@@ -68,51 +67,6 @@ namespace BreakInfinity.Tests
             Assert.That(new BigDouble(299).CompareTo(new BigDouble(299)), Is.EqualTo(0));
             Assert.That(new BigDouble(299).CompareTo(BigDouble.Parse("298")), Is.EqualTo(1));
             Assert.That(new BigDouble(0).CompareTo(0.0), Is.EqualTo(0));
-        }
-
-        [Test]
-        [Repeat(10000)]
-        public void TestDoubleCompatibility()
-        {
-            var first = BigMath.RandomBigDouble(100);
-            var second = BigMath.RandomBigDouble(100);
-            var aDouble = first.ToDouble();
-            var bDouble = second.ToDouble();
-            AssertEqual(first + second, aDouble + bDouble);
-            AssertEqual(first - second, aDouble - bDouble);
-            AssertEqual(first * second, aDouble * bDouble);
-            AssertEqual(first / second, aDouble / bDouble);
-            Assert.That(first.CompareTo(second), Is.EqualTo(aDouble.CompareTo(bDouble)));
-            var smallNumber = BigDouble.Abs(BigMath.RandomBigDouble(2));
-            var smallDouble = Math.Abs(smallNumber.ToDouble());
-            AssertEqual(BigDouble.Log(first, smallDouble), Math.Log(aDouble, smallDouble));
-            AssertEqual(BigDouble.Pow(first, smallDouble), Math.Pow(aDouble, smallDouble));
-        }
-
-        private static void AssertEqual(BigDouble actual, double expected)
-        {
-            if (BigDouble.IsFinite(actual.ToDouble()) == !BigDouble.IsFinite(expected))
-            {
-                Assert.Fail($"One of the values is finite, other is not: BigDouble {actual.ToDouble()}, double {expected}");
-            }
-
-            if (!BigDouble.IsFinite(expected))
-            {
-                return;
-            }
-
-            if (actual.Exponent < -324 && Math.Abs(expected) < double.Epsilon)
-            {
-                return;
-            }
-
-            // TODO: Inconsistency after e-300
-            if (actual.Exponent < -300 && (Math.Log10(expected) < -300 || double.IsNaN(Math.Log10(expected))))
-            {
-                return;
-            }
-
-            Assert.That(actual.Equals(expected, 1E-9));
         }
     }
 }

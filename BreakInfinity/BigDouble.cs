@@ -278,14 +278,10 @@ namespace BreakInfinity
                 return left;
             }
 
-            if (IsNaN(left) || IsInfinity(left))
+            if (IsNaN(left) || IsNaN(right) || IsInfinity(left) || IsInfinity(right))
             {
-                return left;
-            }
-
-            if (IsNaN(right) || IsInfinity(right))
-            {
-                return right;
+                // Let Double handle these cases.
+                return left.Mantissa + right.Mantissa;
             }
 
             BigDouble bigger, smaller;
@@ -395,8 +391,12 @@ namespace BreakInfinity
 
         public int CompareTo(BigDouble other)
         {
-            if (IsZero(Mantissa) || IsZero(other.Mantissa))
+            if (
+                IsZero(Mantissa) || IsZero(other.Mantissa)
+                || IsNaN(this) || IsNaN(other)
+                || IsInfinity(this) || IsInfinity(other))
             {
+                // Let Double handle these cases.
                 return Mantissa.CompareTo(other.Mantissa);
             }
             if (Mantissa > 0 && other.Mantissa < 0)
@@ -433,7 +433,9 @@ namespace BreakInfinity
 
         public bool Equals(BigDouble other)
         {
-            return Exponent == other.Exponent && AreEqual(Mantissa, other.Mantissa);
+            return IsNaN(this) && IsNaN(other)
+                || IsInfinity(this) && IsInfinity(other)
+                || Exponent == other.Exponent && AreEqual(Mantissa, other.Mantissa);
         }
 
         /// <summary>
@@ -445,7 +447,9 @@ namespace BreakInfinity
         /// </summary>
         public bool Equals(BigDouble other, double tolerance)
         {
-            return Abs(this - other) <= Max(Abs(this), Abs(other)) * tolerance;
+            return IsNaN(this) && IsNaN(other)
+                || IsInfinity(this) && IsInfinity(other)
+                || Abs(this - other) <= Max(Abs(this), Abs(other)) * tolerance;
         }
 
         public static bool operator ==(BigDouble left, BigDouble right)
@@ -512,6 +516,11 @@ namespace BreakInfinity
         public static double Log10(BigDouble value)
         {
             return value.Exponent + Math.Log10(value.Mantissa);
+        }
+
+        public static double Log(BigDouble value, BigDouble @base)
+        {
+            return Log(value, @base.ToDouble());
         }
 
         public static double Log(BigDouble value, double @base)
@@ -711,7 +720,7 @@ namespace BreakInfinity
             return IsZero(Math.Abs(value % 1));
         }
 
-        public static bool IsFinite(double value)
+        private static bool IsFinite(double value)
         {
             return !(double.IsNaN(value) || double.IsInfinity(value));
         }
@@ -1069,6 +1078,11 @@ namespace BreakInfinity
         public static double Log10(this BigDouble value)
         {
             return BigDouble.Log10(value);
+        }
+
+        public static double Log(BigDouble value, BigDouble @base)
+        {
+            return BigDouble.Log(value, @base);
         }
 
         public static double Log(this BigDouble value, double @base)
