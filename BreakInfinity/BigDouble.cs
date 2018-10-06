@@ -82,25 +82,25 @@ namespace BreakInfinity
 
         public long Exponent { get; }
 
-        public static BigDouble Zero { get; } = new BigDouble(0, 0);
+        public static BigDouble Zero = new BigDouble(0, 0);
 
-        public static BigDouble One { get; } = new BigDouble(1, 0);
+        public static BigDouble One = new BigDouble(1, 0);
 
-        public static BigDouble NaN { get; } = new BigDouble(double.NaN, long.MinValue);
+        public static BigDouble NaN = new BigDouble(double.NaN, long.MinValue);
 
         public static bool IsNaN(BigDouble value)
         {
             return double.IsNaN(value.Mantissa);
         }
 
-        public static BigDouble PositiveInfinity { get; } = new BigDouble(double.PositiveInfinity, 0);
+        public static BigDouble PositiveInfinity = new BigDouble(double.PositiveInfinity, 0);
 
         public static bool IsPositiveInfinity(BigDouble value)
         {
             return double.IsPositiveInfinity(value.Mantissa);
         }
 
-        public static BigDouble NegativeInfinity { get; } = new BigDouble(double.NegativeInfinity, 0);
+        public static BigDouble NegativeInfinity = new BigDouble(double.NegativeInfinity, 0);
 
         public static bool IsNegativeInfinity(BigDouble value)
         {
