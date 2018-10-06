@@ -206,6 +206,7 @@ namespace BreakInfinity
             {
                 return value;
             }
+
             if (value.Exponent < -1)
             {
                 return Zero;
@@ -225,6 +226,7 @@ namespace BreakInfinity
             {
                 return value;
             }
+
             if (value.Exponent < -1)
             {
                 return Math.Sign(value.Mantissa) >= 0 ? Zero : -One;
@@ -244,6 +246,7 @@ namespace BreakInfinity
             {
                 return value;
             }
+
             if (value.Exponent < -1)
             {
                 return Math.Sign(value.Mantissa) > 0 ? One : Zero;
@@ -259,6 +262,11 @@ namespace BreakInfinity
 
         public static BigDouble Truncate(BigDouble value)
         {
+            if (IsNaN(value))
+            {
+                return value;
+            }
+
             if (value.Exponent < 0)
             {
                 return Zero;
