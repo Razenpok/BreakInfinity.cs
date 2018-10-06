@@ -80,6 +80,110 @@ namespace BreakInfinity.Tests
             testCase.AssertEqual(Math.Pow, BigDouble.Pow);
         }
 
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Abs(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Abs, BigDouble.Abs);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Ceiling(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Ceiling, BigDouble.Ceiling);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Cosh(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Cosh, BigDouble.Cosh);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Exp(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Exp, BigDouble.Exp);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Floor(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Floor, BigDouble.Floor);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Log10(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Log10, d => BigDouble.Log10(d));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Max(BinaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Max, BigDouble.Max);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Min(BinaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Min, BigDouble.Min);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Round(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Round, BigDouble.Round);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Sign(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(d => Math.Sign(d), d => BigDouble.Sign(d));
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Sinh(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Sinh, BigDouble.Sinh);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Tanh(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Tanh, BigDouble.Tanh);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalUnaryTestCases))]
+        [TestCaseSource(nameof(GeneralUnaryTestCases))]
+        public void Truncate(UnaryTestCase testCase)
+        {
+            testCase.AssertEqual(Math.Truncate, BigDouble.Truncate);
+        }
+
         private static IEnumerable<TestCaseData> GeneralUnaryTestCases()
         {
             return GeneralTestCaseCombinator.UnaryTestCases;
