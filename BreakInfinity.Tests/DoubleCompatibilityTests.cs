@@ -157,6 +157,14 @@ namespace BreakInfinity.Tests
         [TestCaseSource(nameof(GeneralUnaryTestCases))]
         public void Sign(UnaryTestCase testCase)
         {
+            if (double.IsNaN(testCase.Values.Double))
+            {
+                // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+                var doubleException = Assert.Catch(() => Math.Sign(testCase.Values.Double));
+                var bigDoubleException = Assert.Catch(() => BigDouble.Sign(testCase.Values.BigDouble));
+                Assert.That(doubleException.GetType(), Is.EqualTo(bigDoubleException.GetType()));
+                return;
+            }
             testCase.AssertEqual(d => Math.Sign(d), d => BigDouble.Sign(d));
         }
 
@@ -337,6 +345,8 @@ namespace BreakInfinity.Tests
                 bigDouble = @double;
                 this.precision = precision;
             }
+
+            public (double Double, BigDouble BigDouble) Values => (@double, bigDouble);
 
             public void AssertEqual(Func<double, double> doubleOperation,
                 Func<BigDouble, BigDouble> bigDoubleOperation)
