@@ -59,6 +59,40 @@ namespace BreakInfinity.Tests
         [Test]
         [TestCaseSource(nameof(FundamentalBinaryTestCases))]
         [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Equality(BinaryTestCase testCase)
+        {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            testCase.AssertComparison((d1, d2) => d1 == d2, (bd1, bd2) => bd1 == bd2);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void Inequality(BinaryTestCase testCase)
+        {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            testCase.AssertComparison((d1, d2) => d1 != d2, (bd1, bd2) => bd1 != bd2);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void GreaterThan(BinaryTestCase testCase)
+        {
+            testCase.AssertComparison((d1, d2) => d1 > d2, (bd1, bd2) => bd1 > bd2);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
+        public void LessThan(BinaryTestCase testCase)
+        {
+            testCase.AssertComparison((d1, d2) => d1 < d2, (bd1, bd2) => bd1 < bd2);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(FundamentalBinaryTestCases))]
+        [TestCaseSource(nameof(GeneralBinaryTestCases))]
         public void CompareTo(BinaryTestCase testCase)
         {
             testCase.AssertEqual((d1, d2) => d1.CompareTo(d2), (bd1, bd2) => bd1.CompareTo(bd2));
@@ -376,6 +410,15 @@ namespace BreakInfinity.Tests
                 var doubleResult = doubleOperation(doubles.first, doubles.second);
                 var bigDoubleResult = bigDoubleOperation(bigDoubles.first, bigDoubles.second);
                 DoubleCompatibilityTests.AssertEqual(bigDoubleResult, doubleResult, precision);
+            }
+
+            public void AssertComparison(Func<double, double, bool> doubleOperation,
+                Func<BigDouble, BigDouble, bool> bigDoubleOperation)
+            {
+                var doubleResult = doubleOperation(doubles.first, doubles.second);
+                var bigDoubleResult = bigDoubleOperation(bigDoubles.first, bigDoubles.second);
+                Assert.That(doubleResult, Is.EqualTo(bigDoubleResult),
+                    $"Double implementation: {doubleResult}, BigDouble implementation: {bigDoubleResult}");
             }
         }
     }
