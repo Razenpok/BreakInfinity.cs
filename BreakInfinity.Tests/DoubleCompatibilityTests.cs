@@ -11,7 +11,6 @@ namespace BreakInfinity.Tests
         [Test]
         public void SpecialValuesEquality()
         {
-            Assert.That(BigDouble.NaN.Equals(double.NaN));
             Assert.That(BigDouble.PositiveInfinity.Equals(double.PositiveInfinity));
             Assert.That(BigDouble.NegativeInfinity.Equals(double.NegativeInfinity));
         }
@@ -355,6 +354,11 @@ namespace BreakInfinity.Tests
             if (IsOutsideDoubleRange(bigDouble))
             {
                 Assert.Ignore("Result is not in range of possible Double values");
+            }
+
+            if (BigDouble.IsNaN(bigDouble) && double.IsNaN(@double))
+            {
+                return;
             }
             Assert.That(bigDouble.Equals(@double, precision),
                 $"Double implementation: {@double}, BigDouble implementation {bigDouble}");

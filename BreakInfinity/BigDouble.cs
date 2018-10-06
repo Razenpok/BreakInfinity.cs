@@ -90,7 +90,7 @@ namespace BreakInfinity
 
         public static bool IsNaN(BigDouble value)
         {
-            return double.IsNaN(value.Mantissa) || value.Exponent == long.MinValue;
+            return double.IsNaN(value.Mantissa);
         }
 
         public static BigDouble PositiveInfinity { get; } = new BigDouble(double.PositiveInfinity, 0);
@@ -443,9 +443,8 @@ namespace BreakInfinity
 
         public bool Equals(BigDouble other)
         {
-            return IsNaN(this) && IsNaN(other)
-                || IsInfinity(this) && IsInfinity(other)
-                || Exponent == other.Exponent && AreEqual(Mantissa, other.Mantissa);
+            return !IsNaN(this) && !IsNaN(other) && (AreSameInfinity(this, other)
+                || Exponent == other.Exponent && AreEqual(Mantissa, other.Mantissa));
         }
 
         /// <summary>
@@ -457,9 +456,14 @@ namespace BreakInfinity
         /// </summary>
         public bool Equals(BigDouble other, double tolerance)
         {
-            return IsNaN(this) && IsNaN(other)
-                || IsInfinity(this) && IsInfinity(other)
-                || Abs(this - other) <= Max(Abs(this), Abs(other)) * tolerance;
+            return !IsNaN(this) && !IsNaN(other) && (AreSameInfinity(this, other)
+                || Abs(this - other) <= Max(Abs(this), Abs(other)) * tolerance);
+        }
+
+        private static bool AreSameInfinity(BigDouble first, BigDouble second)
+        {
+            return IsPositiveInfinity(first) && IsPositiveInfinity(second)
+                || IsNegativeInfinity(first) && IsNegativeInfinity(second);
         }
 
         public static bool operator ==(BigDouble left, BigDouble right)
