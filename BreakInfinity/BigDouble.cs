@@ -852,7 +852,7 @@ namespace BreakInfinity
                 }
 
                 return value.Mantissa.ToString(format, CultureInfo.InvariantCulture)
-                       + "e" + (value.Exponent >= 0 ? "+" : "")
+                       + "E" + (value.Exponent >= 0 ? "+" : "")
                        + value.Exponent.ToString(CultureInfo.InvariantCulture);
             }
 
@@ -865,7 +865,7 @@ namespace BreakInfinity
             {
                 if (value.Exponent <= -ExpLimit || IsZero(value.Mantissa))
                 {
-                    return "0" + (places > 0 ? ".".PadRight(places + 1, '0') : "") + "e+0";
+                    return "0" + (places > 0 ? ".".PadRight(places + 1, '0') : "") + "E+0";
                 }
 
                 var len = (places >= 0 ? places : MaxSignificantDigits) + 1;
@@ -877,7 +877,7 @@ namespace BreakInfinity
                 {
                     mantissa = mantissa.TrimEnd('0', '.');
                 }
-                return mantissa + "e" + (value.Exponent >= 0 ? "+" : "")
+                return mantissa + "E" + (value.Exponent >= 0 ? "+" : "")
                        + value.Exponent;
             }
 
