@@ -286,6 +286,10 @@ namespace BreakInfinity.Tests
             .Value("0", 0)
             .Value("1", 1)
             .Value("-1", -1)
+            .Value("1,1", 1.1)
+            .Value("-1,1", -1.1)
+            .Value("0,9", 0.9)
+            .Value("-0,9", -0.9)
             .Value("∞", double.PositiveInfinity)
             .Value("-∞", double.NegativeInfinity)
             .Value("NaN", double.NaN);
@@ -341,7 +345,7 @@ namespace BreakInfinity.Tests
             private static TestCaseData TestCaseData(TestCaseValue first, TestCaseValue second)
             {
                 var testCase = new BinaryTestCase(first.Value, second.Value, Math.Max(first.Precision, second.Precision));
-                return new TestCaseData(testCase).SetName($"{first.Name}, {second.Name}");
+                return new TestCaseData(testCase).SetName($"{first.Name}; {second.Name}");
             }
 
             private class TestCaseValue

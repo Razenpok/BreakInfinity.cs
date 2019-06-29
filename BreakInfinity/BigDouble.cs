@@ -1,8 +1,19 @@
 ﻿using System;
 using System.Globalization;
+using Random = System.Random;
+
+// I'm not sure if there's a "Yes, this is Unity" define symbol
+// (#if UNITY doesn't seem to work). If you happen to know one - please create
+// an issue here https://github.com/Razenpok/BreakInfinity.cs/issues.
+#if UNITY_2017_1_OR_NEWER
+using UnityEngine;
+#endif
 
 namespace BreakInfinity
 {
+#if UNITY_2017_1_OR_NEWER
+    [Serializable]
+#endif
     public struct BigDouble : IFormattable, IComparable, IComparable<BigDouble>, IEquatable<BigDouble>
     {
         public const double Tolerance = 1e-18;
@@ -18,16 +29,26 @@ namespace BreakInfinity
         //The smallest exponent that can appear in a Double, though not all mantissas are valid here.
         private const long DoubleExpMin = -324;
 
+#if UNITY_2017_1_OR_NEWER
+        [SerializeField]
+        private double mantissa;
+        [SerializeField]
+        private long exponent;
+#else
+        private double mantissa;
+        private long exponent;
+#endif
+
         public BigDouble(double mantissa, long exponent)
         {
-            Mantissa = mantissa;
-            Exponent = exponent;
+            this.mantissa = mantissa;
+            this.exponent = exponent;
         }
 
         public BigDouble(BigDouble other)
         {
-            Mantissa = other.Mantissa;
-            Exponent = other.Exponent;
+            mantissa = other.mantissa;
+            exponent = other.exponent;
         }
 
         public BigDouble(double value)
@@ -80,9 +101,9 @@ namespace BreakInfinity
             return new BigDouble(mantissa, exponent + tempExponent);
         }
 
-        public double Mantissa { get; }
+        public double Mantissa => mantissa;
 
-        public long Exponent { get; }
+        public long Exponent => exponent;
 
         public static BigDouble Zero = new BigDouble(0, 0);
 
@@ -395,18 +416,27 @@ namespace BreakInfinity
             return Divide(left, right);
         }
 
+        public static BigDouble operator ++(BigDouble value)
+        {
+            return value.Add(1);
+        }
+
+        public static BigDouble operator --(BigDouble value)
+        {
+            return value.Subtract(1);
+        }
+
         public int CompareTo(object other)
         {
             if (other == null)
             {
                 return 1;
             }
-
-            if (!(other is BigDouble bigDouble))
+            if (other is BigDouble)
             {
-                throw new ArgumentException("The parameter must be a BigDouble.");
+                return CompareTo((BigDouble) other);
             }
-            return CompareTo(bigDouble);
+            throw new ArgumentException("The parameter must be a BigDouble.");
         }
 
         public int CompareTo(BigDouble other)
@@ -436,11 +466,7 @@ namespace BreakInfinity
 
         public override bool Equals(object other)
         {
-            if (!(other is BigDouble bigDouble))
-            {
-                return false;
-            }
-            return Equals(bigDouble);
+            return other is BigDouble && Equals((BigDouble)other);
         }
 
         public override int GetHashCode()
@@ -785,7 +811,8 @@ namespace BreakInfinity
                     return value.Mantissa > 0 ? "Infinity" : "-Infinity";
                 }
 
-                var formatSpecifier = ParseFormatSpecifier(format, out var formatDigits);
+                int formatDigits;
+                var formatSpecifier = ParseFormatSpecifier(format, out formatDigits);
                 switch (formatSpecifier)
                 {
                     case 'R':
