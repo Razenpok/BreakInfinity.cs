@@ -141,7 +141,7 @@ namespace BreakInfinity
             {
                 var parts = value.Split('e');
                 var mantissa = double.Parse(parts.Length == 2 ? parts[0] : "1", CultureInfo.InvariantCulture);
-                var exponent = long.Parse(parts[part.Length - 1], CultureInfo.InvariantCulture); // Did a small hack here
+                var exponent = long.Parse(parts[parts.Length - 1], CultureInfo.InvariantCulture); // Did a small hack here
                 return Normalize(mantissa, exponent);
             }
 
