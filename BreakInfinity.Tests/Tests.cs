@@ -42,7 +42,7 @@ namespace BreakInfinity.Tests
             string[] testCases = ["1e308", "1E308", "1E+308", "1e+308", "e308", "e+308"]
             foreach (string testCase in testCases) {
                 BigDouble parsedNumber = BigDouble.Parse(testCase)
-                Assert.That(parsedNumber.ToDouble(), Is.EqualTo(Double.Parse(testCase)))
+                Assert.That(parsedNumber.ToDouble(), Is.EqualTo(1e308))
             }
         }
     }
