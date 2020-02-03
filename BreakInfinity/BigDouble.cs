@@ -137,9 +137,11 @@ namespace BreakInfinity
 
         public static BigDouble Parse(string value)
         {
+            value = value.ToLower();
             if (value.IndexOf('e') != -1)
             {
-                var parts = value.Split('e');
+                string[] parts = value.Split('e');
+                if (parts[0] == "") parts = new string[] { parts[1] };
                 var mantissa = double.Parse(parts.Length == 2 ? parts[0] : "1", CultureInfo.InvariantCulture);
                 var exponent = long.Parse(parts[parts.Length - 1], CultureInfo.InvariantCulture); // Did a small hack here
                 return Normalize(mantissa, exponent);
@@ -879,7 +881,7 @@ namespace BreakInfinity
                 }
 
                 return value.Mantissa.ToString(format, CultureInfo.InvariantCulture)
-                       + "E" + (value.Exponent >= 0 ? "+" : "")
+                       + "e" + (value.Exponent >= 0 ? "+" : "")
                        + value.Exponent.ToString(CultureInfo.InvariantCulture);
             }
 
@@ -904,7 +906,7 @@ namespace BreakInfinity
                 {
                     mantissa = mantissa.TrimEnd('0', '.');
                 }
-                return mantissa + "E" + (value.Exponent >= 0 ? "+" : "")
+                return mantissa + "e" + (value.Exponent >= 0 ? "+" : "")
                        + value.Exponent;
             }
 
