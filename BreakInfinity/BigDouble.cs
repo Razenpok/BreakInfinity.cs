@@ -595,7 +595,8 @@ namespace BreakInfinity
 
         public static double Log(BigDouble value, double @base)
         {
-            if (IsZero(@base))
+            if (value == 1 && (@base == 0 || IsPositiveInfinity(@base))) return 0;
+            if (IsZero(@base) || (@base == 1 && value != 1) || IsPositiveInfinity(@base))
             {
                 return double.NaN;
             }
@@ -641,12 +642,50 @@ namespace BreakInfinity
 
         public static BigDouble Pow(BigDouble value, double power)
         {
-            // TODO: power can be greater that long.MaxValue, which can bring troubles in fast track
+            // Basic cases
+            if (IsNaN(value) || IsNaN(power)) return NaN;
+            if (value != 0 && power == 0) return 1;
+
+            // Handle Infinity value
+            if (IsPositiveInfinity(value)) return PositiveInfinity;
+
+            // Handle -Infinity value
+            if (IsNegativeInfinity(value))
+            {
+                if (power < 0) return 0;
+                if (power == 1) return NegativeInfinity;
+                return PositiveInfinity;
+            }
+
+            // Handle Infinity power
+            if (double.IsInfinity(power))
+            {
+                if (value == -1)
+                {
+                    return NaN;
+                }
+                value = Abs(value);
+                if (value == 1) return 1;
+                if (double.IsPositiveInfinity(power))
+                {
+                    return value > 1 ? PositiveInfinity : 0;
+                }
+                return value > 1 ? 0 : PositiveInfinity;
+            }
+
+            // Handle 0 value
+            if (value == 0)
+            {
+                if (power < 0) return PositiveInfinity;
+            }
+
+            // TODO: power can be greater than long.MaxValue, which can bring troubles in fast track
             var powerIsInteger = IsInteger(power);
             if (value < 0 && !powerIsInteger)
             {
                 return NaN;
             }
+
             return Is10(value) && powerIsInteger ? Pow10(power) : PowInternal(value, power);
         }
 
@@ -761,6 +800,7 @@ namespace BreakInfinity
 
         public static BigDouble Tanh(BigDouble value)
         {
+            if (IsInfinity(value)) return Sign(value);
             return Sinh(value) / Cosh(value);
         }
 
