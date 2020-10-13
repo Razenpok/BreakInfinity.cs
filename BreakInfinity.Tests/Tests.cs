@@ -12,16 +12,16 @@ namespace BreakInfinity.Tests
         [Test]
         public void TestToString()
         {
-            Assert.That(TestValueExponent4.ToString(), Is.EqualTo("1.23456789e+1234"));
+            Assert.That(TestValueExponent4.ToString(), Is.EqualTo("1.23456789E+1234"));
         }
 
         [Test]
         public void TestToExponential()
         {
-            Assert.That(TestValueExponent4.ToString("E0"), Is.EqualTo("1e+1234"));
-            Assert.That(TestValueExponent4.ToString("E4"), Is.EqualTo("1.2346e+1234"));
-            Assert.That(TestValueExponent1.ToString("E0"), Is.EqualTo("1e+3"));
-            Assert.That(TestValueExponent1.ToString("E4"), Is.EqualTo("1.2346e+3"));
+            Assert.That(TestValueExponent4.ToString("E0"), Is.EqualTo("1E+1234"));
+            Assert.That(TestValueExponent4.ToString("E4"), Is.EqualTo("1.2346E+1234"));
+            Assert.That(TestValueExponent1.ToString("E0"), Is.EqualTo("1E+3"));
+            Assert.That(TestValueExponent1.ToString("E4"), Is.EqualTo("1.2346E+3"));
         }
 
         [Test]
@@ -34,6 +34,14 @@ namespace BreakInfinity.Tests
             Assert.That(TestValueExponent4.ToString("F4"), Is.EqualTo("123456789" + aLotOfZeroes + ".0000"));
             Assert.That(TestValueExponent1.ToString("F0"), Is.EqualTo("1235"));
             Assert.That(TestValueExponent1.ToString("F4"), Is.EqualTo("1234.5679"));
+        }
+
+        [Test]
+        public void TestEquals()
+        {
+            var value1 = new BigDouble(123, 5);
+            var value2 = new BigDouble(1.23, 7);
+            Assert.IsTrue(value1.Equals(value2));
         }
     }
 }

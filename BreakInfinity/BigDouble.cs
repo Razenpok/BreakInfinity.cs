@@ -39,10 +39,17 @@ namespace BreakInfinity
         private long exponent;
 #endif
 
-        public BigDouble(double mantissa, long exponent)
+        // This constructor is used to prevent non-normalized values to be created via constructor.
+        // ReSharper disable once UnusedParameter.Local
+        private BigDouble(double mantissa, long exponent, PrivateConstructorArg _)
         {
             this.mantissa = mantissa;
             this.exponent = exponent;
+        }
+
+        public BigDouble(double mantissa, long exponent)
+        {
+            this = Normalize(mantissa, exponent);
         }
 
         public BigDouble(BigDouble other)
@@ -80,7 +87,7 @@ namespace BreakInfinity
         {
             if (mantissa >= 1 && mantissa < 10 || !IsFinite(mantissa))
             {
-                return new BigDouble(mantissa, exponent);
+                return FromMantissaExponentNoNormalize(mantissa, exponent);
             }
             if (IsZero(mantissa))
             {
@@ -98,32 +105,37 @@ namespace BreakInfinity
                 mantissa = mantissa / PowersOf10.Lookup(tempExponent);
             }
 
-            return new BigDouble(mantissa, exponent + tempExponent);
+            return FromMantissaExponentNoNormalize(mantissa, exponent + tempExponent);
         }
 
         public double Mantissa => mantissa;
 
         public long Exponent => exponent;
 
-        public static BigDouble Zero = new BigDouble(0, 0);
+        public static BigDouble FromMantissaExponentNoNormalize(double mantissa, long exponent)
+        {
+            return new BigDouble(mantissa, exponent, new PrivateConstructorArg());
+        }
 
-        public static BigDouble One = new BigDouble(1, 0);
+        public static BigDouble Zero = FromMantissaExponentNoNormalize(0, 0);
 
-        public static BigDouble NaN = new BigDouble(double.NaN, long.MinValue);
+        public static BigDouble One = FromMantissaExponentNoNormalize(1, 0);
+
+        public static BigDouble NaN = FromMantissaExponentNoNormalize(double.NaN, long.MinValue);
 
         public static bool IsNaN(BigDouble value)
         {
             return double.IsNaN(value.Mantissa);
         }
 
-        public static BigDouble PositiveInfinity = new BigDouble(double.PositiveInfinity, 0);
+        public static BigDouble PositiveInfinity = FromMantissaExponentNoNormalize(double.PositiveInfinity, 0);
 
         public static bool IsPositiveInfinity(BigDouble value)
         {
             return double.IsPositiveInfinity(value.Mantissa);
         }
 
-        public static BigDouble NegativeInfinity = new BigDouble(double.NegativeInfinity, 0);
+        public static BigDouble NegativeInfinity = FromMantissaExponentNoNormalize(double.NegativeInfinity, 0);
 
         public static bool IsNegativeInfinity(BigDouble value)
         {
@@ -210,12 +222,12 @@ namespace BreakInfinity
 
         public static BigDouble Abs(BigDouble value)
         {
-            return new BigDouble(Math.Abs(value.Mantissa), value.Exponent);
+            return FromMantissaExponentNoNormalize(Math.Abs(value.Mantissa), value.Exponent);
         }
 
         public static BigDouble Negate(BigDouble value)
         {
-            return new BigDouble(-value.Mantissa, value.Exponent);
+            return FromMantissaExponentNoNormalize(-value.Mantissa, value.Exponent);
         }
 
         public static int Sign(BigDouble value)
@@ -621,7 +633,7 @@ namespace BreakInfinity
 
         public static BigDouble Pow10(long power)
         {
-            return new BigDouble(1, power);
+            return FromMantissaExponentNoNormalize(1, power);
         }
 
         public static BigDouble Pow(BigDouble value, BigDouble power)
@@ -961,6 +973,8 @@ namespace BreakInfinity
                 return Powers[IndexOf0 + power];
             }
         }
+
+        private struct PrivateConstructorArg { }
     }
 
     public static class BigMath
