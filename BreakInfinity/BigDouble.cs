@@ -255,6 +255,26 @@ namespace BreakInfinity
             return value;
         }
 
+        public static BigDouble Round(BigDouble value, MidpointRounding mode)
+        {
+            if (IsNaN(value))
+            {
+                return value;
+            }
+
+            if (value.Exponent < -1)
+            {
+                return Zero;
+            }
+
+            if (value.Exponent < MaxSignificantDigits)
+            {
+                return new BigDouble(Math.Round(value.ToDouble(), mode));
+            }
+
+            return value;
+        }
+
         public static BigDouble Floor(BigDouble value)
         {
             if (IsNaN(value))
