@@ -43,5 +43,13 @@ namespace BreakInfinity.Tests
             var value2 = new BigDouble(1.23, 7);
             Assert.IsTrue(value1.Equals(value2));
         }
+
+        [Test]
+        public void TestPow()
+        {
+            // TODO: Proper test description and test cases
+            var result = BigDouble.Pow(1.15f, 6000);
+            Assert.That(BigDouble.IsInfinity(result), Is.False);
+        }
     }
 }

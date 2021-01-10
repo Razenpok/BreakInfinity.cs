@@ -663,10 +663,20 @@ namespace BreakInfinity
 
         public static BigDouble Pow(BigDouble value, long power)
         {
-            return Is10(value)
-                ? Pow10(power)
-                // TODO: overflows
-                : Normalize(Math.Pow(value.Mantissa, power), value.Exponent * power);
+            if (Is10(value))
+            {
+                return Pow10(power);
+            }
+
+            var mantissa = Math.Pow(value.Mantissa, power);
+            if (double.IsInfinity(mantissa))
+            {
+                // TODO: This is rather dumb, but works anyway
+                // Power is too big for our mantissa, so we do multiple Pow with smaller powers.
+                return Pow(Pow(value, 2), (double) power / 2);
+            }
+
+            return Normalize(mantissa, value.Exponent * power);
         }
 
         public static BigDouble Pow(BigDouble value, double power)
