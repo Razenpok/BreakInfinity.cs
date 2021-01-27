@@ -423,6 +423,11 @@ namespace BreakInfinity
             return new BigDouble(value);
         }
 
+        public static explicit operator double(BigDouble value)
+        {
+            return value.ToDouble();
+        }
+
         public static BigDouble operator -(BigDouble value)
         {
             return Negate(value);
